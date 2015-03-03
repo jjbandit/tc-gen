@@ -1,10 +1,13 @@
 package com.PRC.tcGen;
 
+import org.apache.poi.*;
+import org.apache.poi.xssf.*;
+
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
-import javax.swing.SwingUtilities;
 import javax.swing.filechooser.*;
 
 /*
@@ -14,20 +17,13 @@ import javax.swing.filechooser.*;
  */
 public class TimecardGenerator extends JPanel
                              implements ActionListener {
+
     static private final String newline = "\n";
     JButton openButton, saveButton;
-    JTextArea log;
     JFileChooser fc;
 
     public TimecardGenerator() {
         super(new BorderLayout());
-
-        //Create the log first, because the action listeners
-        //need to refer to it.
-        log = new JTextArea(5,20);
-        log.setMargin(new Insets(5,5,5,5));
-        log.setEditable(false);
-        JScrollPane logScrollPane = new JScrollPane(log);
 
         //Create a file chooser
         fc = new JFileChooser();
@@ -61,7 +57,6 @@ public class TimecardGenerator extends JPanel
 
         //Add the buttons and the log to this panel.
         add(buttonPanel, BorderLayout.PAGE_START);
-        add(logScrollPane, BorderLayout.CENTER);
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -73,11 +68,8 @@ public class TimecardGenerator extends JPanel
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
                 //This is where a real application would open the file.
-                log.append("Opening: " + file.getName() + "." + newline);
             } else {
-                log.append("Open command cancelled by user." + newline);
             }
-            log.setCaretPosition(log.getDocument().getLength());
 
         //Handle save button action.
         } else if (e.getSource() == saveButton) {
@@ -85,11 +77,8 @@ public class TimecardGenerator extends JPanel
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
                 //This is where a real application would save the file.
-                log.append("Saving: " + file.getName() + "." + newline);
             } else {
-                log.append("Save command cancelled by user." + newline);
             }
-            log.setCaretPosition(log.getDocument().getLength());
         }
     }
 
