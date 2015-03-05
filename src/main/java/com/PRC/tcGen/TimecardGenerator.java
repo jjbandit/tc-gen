@@ -1,125 +1,192 @@
 package com.PRC.tcGen;
 
-import org.apache.poi.*;
-import org.apache.poi.xssf.*;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
-import java.io.*;
-import java.awt.*;
-import java.awt.event.*;
+import javax.swing.GroupLayout;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
-import javax.swing.*;
-import javax.swing.filechooser.*;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-/*
- * TimecardGenerator.java uses these files:
- *   images/Open16.gif
- *   images/Save16.gif
- */
-public class TimecardGenerator extends JPanel
-                             implements ActionListener {
+public class TimecardGenerator extends JPanel implements ActionListener {
 
-    static private final String newline = "\n";
-    JButton openButton, saveButton;
-    JFileChooser fc;
+		JButton openButton, exitButton;
+		JFileChooser fc;
 
-    public TimecardGenerator() {
-        super(new BorderLayout());
+		public TimecardGenerator () {
 
-        //Create a file chooser
-        fc = new JFileChooser();
+			GroupLayout layout = new GroupLayout(this);
+			this.setLayout(layout);
+			layout.setAutoCreateGaps(true);
+			layout.setAutoCreateContainerGaps(true);
 
-        //Uncomment one of the following lines to try a different
-        //file selection mode.  The first allows just directories
-        //to be selected (and, at least in the Java look and feel,
-        //shown).  The second allows both files and directories
-        //to be selected.  If you leave these lines commented out,
-        //then the default mode (FILES_ONLY) will be used.
-        //
-        //fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        //fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+			EmployeeList el = new EmployeeList();
+			EmployeeList el2 = new EmployeeList();
 
-        //Create the open button.  We use the image from the JLF
-        //Graphics Repository (but we extracted it from the jar).
-        openButton = new JButton("Open a File...",
-                                 createImageIcon("images/Open16.gif"));
-        openButton.addActionListener(this);
+			//Create a file chooser
+			fc = new JFileChooser();
 
-        //Create the save button.  We use the image from the JLF
-        //Graphics Repository (but we extracted it from the jar).
-        saveButton = new JButton("Save a File...",
-                                 createImageIcon("images/Save16.gif"));
-        saveButton.addActionListener(this);
+			//Create the open button.  We use the image from the JLF
+			//Graphics Repository (but we extracted it from the jar).
+			openButton = new JButton("Open a File...");
+			openButton.addActionListener(this);
 
-        //For layout purposes, put the buttons in a separate panel
-        JPanel buttonPanel = new JPanel(); //use FlowLayout
-        buttonPanel.add(openButton);
-        buttonPanel.add(saveButton);
+			//Create the save button.  We use the image from the JLF
+			//Graphics Repository (but we extracted it from the jar).
+			exitButton = new JButton("Close");
+			exitButton.addActionListener(this);
 
-        //Add the buttons and the log to this panel.
-        add(buttonPanel, BorderLayout.PAGE_START);
-    }
+			//For layout purposes, put the buttons in a separate panel
+			JPanel buttonPanel = new JPanel(); //use FlowLayout
+			buttonPanel.add(openButton);
+			buttonPanel.add(exitButton);
 
-    public void actionPerformed(ActionEvent e) {
+			//Add the buttons and the log to this panel.
+			layout.setHorizontalGroup(
+				layout.createSequentialGroup()
+					.addComponent(buttonPanel)
+					.addComponent(el)
+					.addComponent(el2)
+			);
+			layout.setVerticalGroup(
+				layout.createParallelGroup()
+					.addComponent(buttonPanel)
+					.addComponent(el)
+					.addComponent(el2)
+			);
+		}
 
-        //Handle open button action.
-        if (e.getSource() == openButton) {
-            int returnVal = fc.showOpenDialog(TimecardGenerator.this);
+		public XSSFWorkbook readExcelFile(File timecardTemplateFile) throws IOException, InvalidFormatException
+		{
+			InputStream stream = new FileInputStream(timecardTemplateFile);
+			XSSFWorkbook template = new XSSFWorkbook(stream);
+			return template;
+		}
 
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                File file = fc.getSelectedFile();
-                //This is where a real application would open the file.
-            } else {
-            }
+		public void writeExcelFile(XSSFWorkbook workbook) throws IOException, InvalidFormatException
+		{
+			FileOutputStream fileOut = new FileOutputStream("target/testWorkbook.xlsx");
+			workbook.write(fileOut);
+			workbook.close();
+			fileOut.close();
+		}
 
-        //Handle save button action.
-        } else if (e.getSource() == saveButton) {
-            int returnVal = fc.showSaveDialog(TimecardGenerator.this);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                File file = fc.getSelectedFile();
-                //This is where a real application would save the file.
-            } else {
-            }
-        }
-    }
+		private String getLastSheetName(XSSFWorkbook workbook)
+		{
+			String lastSheetString = workbook.getSheetAt(workbook.getNumberOfSheets() - 1).getSheetName();
+			return lastSheetString;
+		}
 
-    /** Returns an ImageIcon, or null if the path was invalid. */
-    protected static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = TimecardGenerator.class.getResource(path);
-        if (imgURL != null) {
-            return new ImageIcon(imgURL);
-        } else {
-            System.err.println("Couldn't find file: " + path);
-            return null;
-        }
-    }
+		public void initEmployeeLists(XSSFWorkbook workbook)
+		{
+			String lastSheetString = getLastSheetName(workbook);
+			if (lastSheetString.equals("Roster"))
+			{
+				System.out.println("found a Roster, populating GUI lists");
+				XSSFSheet rosterSheet = workbook.getSheet(lastSheetString);
+				for (Row row : rosterSheet)
+				{
+					for (Cell cell : row)
+					{
+						try
+						{
+							System.out.println(cell.getStringCellValue());
+							// listModel.addElement(cell.getStringCellValue());
+						} catch (IllegalStateException e)
+						{
+							System.out.println((int)cell.getNumericCellValue());
+							// listModel.addElement(cell.getNumericCellValue());
+						}
+						finally{}
+					}
+				}
 
-    /**
-     * Create the GUI and show it.  For thread safety,
-     * this method should be invoked from the
-     * event dispatch thread.
-     */
-    private static void createAndShowGUI() {
-        //Create and set up the window.
-        JFrame frame = new JFrame("TimecardGenerator");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        //Add content to the window.
-        frame.add(new TimecardGenerator());
+			} else {
+				System.out.println("!found a Roster, creating");
+				workbook.createSheet("Roster");
+			}
 
-        //Display the window.
-        frame.pack();
-        frame.setVisible(true);
-    }
 
-    public static void main(String[] args) {
-        //Schedule a job for the event dispatch thread:
-        //creating and showing this application's GUI.
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                //Turn off metal's use of bold fonts
-                UIManager.put("swing.boldMetal", Boolean.FALSE); 
-                createAndShowGUI();
-            }
-        });
-    }
+		}
+
+		public void actionPerformed(ActionEvent e) {
+				//Handle open button actionm.
+				if (e.getSource() == openButton) {
+
+					fc.setCurrentDirectory(new java.io.File("").getAbsoluteFile());
+					int returnVal = fc.showOpenDialog(TimecardGenerator.this);
+					if (returnVal == JFileChooser.APPROVE_OPTION) {
+						File file = fc.getSelectedFile();
+						// String filePath = file.getAbsolutePath();
+						try
+						{
+
+
+
+							XSSFWorkbook wb = readExcelFile(file);
+							initEmployeeLists(wb);
+							writeExcelFile(wb);
+
+
+
+						}
+						catch(IOException ioe)
+						{}
+						catch(InvalidFormatException ife)
+						{}
+						finally {}
+					} else {
+					}
+
+			//Handle exit button action.
+				} else if (e.getSource() == exitButton) {
+					System.exit(0);
+				}
+		}
+
+		/**
+		* Create the GUI and show it.  For thread safety,
+		* this method should be invoked from the
+		* event dispatch thread.
+		*/
+		private static void createAndShowGUI() {
+				//Create and set up the window.
+				JFrame frame = new JFrame("TimecardGenerator");
+				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+				//Add content to the window.
+				frame.add(new TimecardGenerator());
+
+				//Display the window.
+				frame.pack();
+				frame.setVisible(true);
+		}
+
+		public static void main(String[] args) {
+				//Schedule a job for the event dispatch thread:
+				//creating and showing this application's GUI.
+				SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+								//Turn off metal's use of bold fonts
+								UIManager.put("swing.boldMetal", Boolean.FALSE);
+								createAndShowGUI();
+						}
+				});
+		}
 }
