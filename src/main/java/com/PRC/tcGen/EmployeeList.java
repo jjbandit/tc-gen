@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -16,7 +17,7 @@ public class EmployeeList extends JPanel implements ActionListener
 	private DefaultListModel<String> employeeListModel;
 	private JList<String> employeeJList;
 
-	private Button addEmployee;
+	private JButton addEmployee;
 	private JTextField newEmployeeName, newEmployeeID;
 	// private DefaultListModel<Integer> employeeIDModel;
 	// private JList<Integer> employeeIDJlist;
@@ -33,7 +34,6 @@ public class EmployeeList extends JPanel implements ActionListener
 		employeeJList.setVisibleRowCount(5);
 		employeeJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		JScrollPane employeeListPane = new JScrollPane(employeeJList);
-		this.add(employeeListPane);
 
 		// //Create Model and JList
 		// employeeIDModel = new DefaultListModel<Integer>();
@@ -42,8 +42,17 @@ public class EmployeeList extends JPanel implements ActionListener
 		// employeeIDJlist.setVisibleRowCount(5);
 		// employeeIDJlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		// JScrollPane employeeIDListPane = new JScrollPane(employeeIDJlist);
-		// this.add(employeeIDListPane);
 
+		newEmployeeName = new JTextField("", 10);
+		newEmployeeID = new JTextField("", 10);
+		addEmployee = new JButton("+");
+		addEmployee.addActionListener(this);
+
+		// this.add(employeeIDListPane);
+		this.add(employeeListPane);
+		this.add(newEmployeeName);
+		this.add(newEmployeeID);
+		this.add(addEmployee);
 	}
 
 
@@ -52,7 +61,9 @@ public class EmployeeList extends JPanel implements ActionListener
 	
 		if(e.getSource() == addEmployee)
 		{
-			employeeListModel.addElement("A shiny new Employee");  // TODO ADD STUFF TO THE LIST
+			String emName = newEmployeeName.getText();
+			String emID = newEmployeeID.getText();
+			employeeListModel.addElement(emName + " - " + emID);
 		}
 	}
 }
