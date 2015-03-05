@@ -1,6 +1,5 @@
 package com.PRC.tcGen;
 
-import java.awt.Button;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -14,6 +13,8 @@ import javax.swing.ListSelectionModel;
 
 public class EmployeeList extends JPanel implements ActionListener
 {
+	private static final long serialVersionUID = -6932061067756922392L;
+
 	private DefaultListModel<String> employeeListModel;
 	private JList<String> employeeJList;
 

@@ -25,7 +25,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class TimecardGenerator extends JPanel implements ActionListener {
 
-		JButton openButton, exitButton;
+	private static final long serialVersionUID = -867058275401540869L;
+
+	JButton openButton, exitButton;
 		JFileChooser fc;
 
 		public TimecardGenerator () {
