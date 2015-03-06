@@ -1,8 +1,10 @@
 package com.PRC.tcGen;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JList;
@@ -15,56 +17,58 @@ public class EmployeeList extends JPanel implements ActionListener
 {
 	private static final long serialVersionUID = -6932061067756922392L;
 
-	private DefaultListModel<String> employeeListModel;
-	private JList<String> employeeJList;
+	private DefaultListModel<Employee> employeeListModel;
+	private JList<Employee> employeeJList;
 
-	private JButton addEmployee;
+
+	private JButton addEmployeeButton;
 	private JTextField newEmployeeName, newEmployeeID;
-	// private DefaultListModel<Integer> employeeIDModel;
-	// private JList<Integer> employeeIDJlist;
 
 	public EmployeeList () {
 
-		// GridLayout layout = new GridLayout(0,2);
-		// this.setLayout(layout);
+		BoxLayout layout = new BoxLayout(this, BoxLayout.Y_AXIS);
+		setLayout(layout);
 
 		//Create Model and JList
-		employeeListModel = new DefaultListModel<String>();
-		employeeJList = new JList<String>(employeeListModel);
+		employeeListModel = new DefaultListModel<Employee>();
+		employeeJList = new JList<Employee>(employeeListModel);
 
 		employeeJList.setVisibleRowCount(5);
 		employeeJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		JScrollPane employeeListPane = new JScrollPane(employeeJList);
 
-		// //Create Model and JList
-		// employeeIDModel = new DefaultListModel<Integer>();
-		// employeeIDJlist = new JList<Integer>(employeeIDModel);
-
-		// employeeIDJlist.setVisibleRowCount(5);
-		// employeeIDJlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		// JScrollPane employeeIDListPane = new JScrollPane(employeeIDJlist);
-
 		newEmployeeName = new JTextField("", 10);
-		newEmployeeID = new JTextField("", 10);
-		addEmployee = new JButton("+");
-		addEmployee.addActionListener(this);
+		newEmployeeName.setMaximumSize(new Dimension(Integer.MAX_VALUE,
+		newEmployeeName.getPreferredSize().height));
 
-		// this.add(employeeIDListPane);
+		newEmployeeID = new JTextField("", 10);
+		newEmployeeID.setMaximumSize(new Dimension(Integer.MAX_VALUE,
+		newEmployeeID.getPreferredSize().height));
+
+		addEmployeeButton = new JButton("+");
+		addEmployeeButton.addActionListener(this);
+
 		this.add(employeeListPane);
 		this.add(newEmployeeName);
 		this.add(newEmployeeID);
-		this.add(addEmployee);
+		this.add(addEmployeeButton);
 	}
 
+	public void addEmployee(String employeeName, String employeeID)
+	{
+		Employee employee = new Employee(employeeName, employeeID);
+		employeeListModel.addElement(employee);
+	}
 
 	public void actionPerformed(ActionEvent e)
 	{
 	
-		if(e.getSource() == addEmployee)
+		if(e.getSource() == addEmployeeButton)
 		{
 			String emName = newEmployeeName.getText();
 			String emID = newEmployeeID.getText();
-			employeeListModel.addElement(emName + " - " + emID);
+			Employee employee = new Employee(emName, emID);
+			employeeListModel.addElement(employee);
 		}
 	}
 }
