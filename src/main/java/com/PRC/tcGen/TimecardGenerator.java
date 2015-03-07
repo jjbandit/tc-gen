@@ -169,24 +169,33 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		// Loop through each group in the GroupList
 		while (index < i)
 		{
+			// get each employeeGroup in the groupList
 			EmployeeGroup group = employeeGroupList.elementAt(index);
-			DefaultListModel<Employee> employeeList = group.getModel();
+			DefaultListModel<Employee> employeeGroup = group.getModel();
 
-			int numEmployees = employeeList.size();
+			int numEmployees = employeeGroup.size();
 			int count = 0;
 			while (count < numEmployees)
 			{
-				System.out.println(")skjl;kdfsah");
-				System.out.println(count);
-				System.out.println(numEmployees);
-				String employeeName = employeeList.getElementAt(count).getName();
-				Row r = rosterSheet.getRow(index*2);
-				if (r==null){
-					r = rosterSheet.createRow(index*2);
+				String employeeName = employeeGroup.getElementAt(count).getName();
+				String employeeID = employeeGroup.getElementAt(count).getID();
+
+				// Set or create new row for employee names
+				Row nameRow = rosterSheet.getRow(index*2);
+				if (nameRow==null){
+					nameRow = rosterSheet.createRow(index*2);
 				}
-				System.out.println(r);
-				System.out.println(employeeName);
-				r.createCell(count).setCellValue(employeeName);
+				// set the name cell value
+				nameRow.createCell(count).setCellValue(employeeName);
+
+				// Get or create the row immedietly below the nameRow which contains IDs
+				Row IDRow = rosterSheet.getRow((index*2)+1);
+				if (IDRow == null)
+				{
+					IDRow = rosterSheet.createRow((index*2)+1);
+				}
+				IDRow.createCell(count).setCellValue(employeeID);
+
 				count++;
 			}
 			index++;
