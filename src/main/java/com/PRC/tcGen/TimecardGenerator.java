@@ -27,6 +27,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jdatepicker.JDatePicker;
 
 public class TimecardGenerator extends JPanel implements ActionListener {
 
@@ -34,19 +35,22 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 	private static JFrame frame;
 
 	// UI Junk
+
+	BoxLayout layout;
+
 	JButton openButton, exitButton;
 	JFileChooser fc;
-	BoxLayout layout;
+	DatePanel datePanel;
 
 	// keep track of what template were working from
 	private XSSFWorkbook workbook;
+
 	// Create a model to keep track of the number of employee groups initialized
 	private DefaultListModel<EmployeeGroup> employeeGroupList;
 
-
 	public TimecardGenerator() {
 
-		// Initialize the list that keeps track of how many groups there are
+		// Initialize a list to keep track of how many groups there are
 		employeeGroupList = new DefaultListModel<EmployeeGroup>();
 
 		layout = new BoxLayout(this, BoxLayout.X_AXIS);
@@ -54,6 +58,9 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 
 		//Create a file chooser
 		fc = new JFileChooser();
+
+		// Create the date picker
+		datePanel = new DatePanel();
 
 		//Create the open button.  We use the image from the JLF
 		//Graphics Repository (but we extracted it from the jar).
@@ -66,23 +73,26 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		exitButton.addActionListener(this);
 
 		//For layout purposes, put the buttons in a separate panel
-		JPanel buttonPanel = new JPanel(); //use FlowLayout
+		JPanel buttonPanel = new JPanel();
+		BoxLayout b = new BoxLayout(buttonPanel, BoxLayout.Y_AXIS);
+		buttonPanel.setLayout(b);
 		buttonPanel.add(openButton);
 		buttonPanel.add(exitButton);
+		buttonPanel.add(datePanel);
 
 		//Add the buttons and the log to this panel.
 		add(buttonPanel);
 	}
 
 	public XSSFWorkbook readExcelFile(File timecardTemplateFile)
-			throws IOException, InvalidFormatException {
+		throws IOException, InvalidFormatException {
 		InputStream stream = new FileInputStream(timecardTemplateFile);
 		XSSFWorkbook template = new XSSFWorkbook(stream);
 		return template;
 	}
 
-	public void writeExcelFile(XSSFWorkbook workbook) throws IOException,
-			InvalidFormatException {
+	public void writeExcelFile(XSSFWorkbook workbook)
+		throws IOException, InvalidFormatException {
 		FileOutputStream fileOut = new FileOutputStream(
 				"target/testWorkbook.xlsx");
 		workbook.write(fileOut);
@@ -152,8 +162,12 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		}
 	}
 
-	public void serializeGroupList () throws IOException
+	public void serializeGroupList ()
+		throws IOException
 	{
+		// return out if there's no workbook to serialize to
+		if (workbook == null) {return;}
+
 		// We're going to completely remove the rosterSheet and insert a blank one
 		// because it's easier than iterating though all the cells and clearing them
 		int rosterSheetIndex = workbook.getNumberOfSheets() - 1;
@@ -165,7 +179,6 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 
 		int index = 0;
 		int i = employeeGroupList.size();
-		System.out.println(i);
 		// Loop through each group in the GroupList
 		while (index < i)
 		{
@@ -173,6 +186,7 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 			EmployeeGroup group = employeeGroupList.elementAt(index);
 			DefaultListModel<Employee> employeeGroup = group.getModel();
 
+			// iterate through each employee
 			int numEmployees = employeeGroup.size();
 			int count = 0;
 			while (count < numEmployees)
@@ -194,13 +208,16 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 				{
 					IDRow = rosterSheet.createRow((index*2)+1);
 				}
+				// set the ID value
 				IDRow.createCell(count).setCellValue(employeeID);
 
+				// iterate
 				count++;
 			}
 			index++;
 		}
 
+		// Save that shit!
 		FileOutputStream fileOut = new FileOutputStream("aNewWorkbook.xlsx");
 		workbook.write(fileOut);
 		fileOut.close();
@@ -240,7 +257,6 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 			}
 			catch (IOException ex)
 			{}
-			System.out.println("Exiting!");
 			System.exit(0);
 		}
 	}

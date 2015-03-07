@@ -67,7 +67,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 
 	public void actionPerformed(ActionEvent e)
 	{
-	
+
 		if(e.getSource() == addEmployeeButton)
 		{
 			String emName = newEmployeeName.getText();
