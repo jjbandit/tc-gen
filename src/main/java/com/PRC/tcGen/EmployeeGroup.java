@@ -60,6 +60,11 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		employeeGroupModel.addElement(employee);
 	}
 
+	public DefaultListModel<Employee> getModel ()
+	{
+		return employeeGroupModel;
+	}
+
 	public void actionPerformed(ActionEvent e)
 	{
 	

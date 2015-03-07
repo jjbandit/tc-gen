@@ -9,6 +9,15 @@ public class Employee
 		this.employeeName = name;
 		this.employeeID = ID;
 	}
+
+	public String getName ()
+	{
+		return this.employeeName;
+	}
+	public String getID ()
+	{
+		return this.employeeID;
+	}
 	@Override
 	public String toString()
 	{

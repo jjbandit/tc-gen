@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
@@ -20,6 +21,8 @@ import javax.swing.UIManager;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -149,10 +152,44 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		}
 	}
 
-	public void serializeGroupList () {
-		Integer i = employeeGroupList.size();
-		System.out.println(i);
+	public void serializeGroupList () throws IOException
+	{
+		// Get the roster sheet
+		XSSFSheet rosterSheet = workbook.getSheet("Roster");
+		// And clear it so we don't get orphans in our list if
+		// we remove employees
+		Iterator<Row> itr = rosterSheet.iterator();
+		while (itr.hasNext())
+		{
+			itr.next();
+			itr.remove();
+		}
 
+		int index = 0;
+		int i = employeeGroupList.size();
+		// Loop through each group in the GroupList
+		while (index >= i)
+		{
+			EmployeeGroup group = employeeGroupList.elementAt(index);
+			DefaultListModel<Employee> employeeList = group.getModel();
+
+			int numEmployees = employeeList.size();
+			int count = 0;
+			while (count >= numEmployees)
+			{
+				String employeeName = employeeList.getElementAt(count).getName();
+				Row r = rosterSheet.getRow(index*2);
+				r.createCell(count).setCellValue(employeeName);
+			}
+		}
+
+		XSSFSheet sh = workbook.getSheet("Roster");
+		XSSFRow row = sh.createRow(0);
+		row.createCell(0).setCellValue("Wooo!");
+
+		FileOutputStream fileOut = new FileOutputStream("aNewWorkbook.xlsx");
+		workbook.write(fileOut);
+		fileOut.close();
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -183,7 +220,12 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 
 			//Handle exit button action.
 		} else if (e.getSource() == exitButton) {
-			serializeGroupList();
+			try
+			{
+				serializeGroupList();
+			}
+			catch (IOException ex)
+			{}
 			System.exit(0);
 		}
 	}
