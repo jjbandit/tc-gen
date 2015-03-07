@@ -13,29 +13,29 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
-public class EmployeeList extends JPanel implements ActionListener
+public class EmployeeGroup extends JPanel implements ActionListener
 {
 	private static final long serialVersionUID = -6932061067756922392L;
 
-	private DefaultListModel<Employee> employeeListModel;
+	private DefaultListModel<Employee> employeeGroupModel;
 	private JList<Employee> employeeJList;
 
 
 	private JButton addEmployeeButton;
 	private JTextField newEmployeeName, newEmployeeID;
 
-	public EmployeeList () {
+	public EmployeeGroup () {
 
 		BoxLayout layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 		setLayout(layout);
 
 		//Create Model and JList
-		employeeListModel = new DefaultListModel<Employee>();
-		employeeJList = new JList<Employee>(employeeListModel);
+		employeeGroupModel = new DefaultListModel<Employee>();
+		employeeJList = new JList<Employee>(employeeGroupModel);
 
 		employeeJList.setVisibleRowCount(5);
 		employeeJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		JScrollPane employeeListPane = new JScrollPane(employeeJList);
+		JScrollPane employeeGroupPane = new JScrollPane(employeeJList);
 
 		newEmployeeName = new JTextField("", 10);
 		newEmployeeName.setMaximumSize(new Dimension(Integer.MAX_VALUE,
@@ -48,7 +48,7 @@ public class EmployeeList extends JPanel implements ActionListener
 		addEmployeeButton = new JButton("+");
 		addEmployeeButton.addActionListener(this);
 
-		this.add(employeeListPane);
+		this.add(employeeGroupPane);
 		this.add(newEmployeeName);
 		this.add(newEmployeeID);
 		this.add(addEmployeeButton);
@@ -57,7 +57,7 @@ public class EmployeeList extends JPanel implements ActionListener
 	public void addEmployee(String employeeName, String employeeID)
 	{
 		Employee employee = new Employee(employeeName, employeeID);
-		employeeListModel.addElement(employee);
+		employeeGroupModel.addElement(employee);
 	}
 
 	public void actionPerformed(ActionEvent e)
@@ -68,7 +68,7 @@ public class EmployeeList extends JPanel implements ActionListener
 			String emName = newEmployeeName.getText();
 			String emID = newEmployeeID.getText();
 			Employee employee = new Employee(emName, emID);
-			employeeListModel.addElement(employee);
+			employeeGroupModel.addElement(employee);
 		}
 	}
 }

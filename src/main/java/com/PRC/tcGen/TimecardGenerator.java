@@ -1,6 +1,5 @@
 package com.PRC.tcGen;
 
-import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -10,7 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.swing.BoxLayout;
-import javax.swing.GroupLayout;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -21,8 +20,6 @@ import javax.swing.UIManager;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -33,11 +30,21 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 	private static final long serialVersionUID = -867058275401540869L;
 	private static JFrame frame;
 
+	// UI Junk
 	JButton openButton, exitButton;
 	JFileChooser fc;
 	BoxLayout layout;
 
+	// keep track of what template were working from
+	private XSSFWorkbook workbook;
+	// Create a model to keep track of the number of employee groups initialized
+	private DefaultListModel<EmployeeGroup> employeeGroupList;
+
+
 	public TimecardGenerator() {
+
+		// Initialize the list that keeps track of how many groups there are
+		employeeGroupList = new DefaultListModel<EmployeeGroup>();
 
 		layout = new BoxLayout(this, BoxLayout.X_AXIS);
 		this.setLayout(layout);
@@ -52,7 +59,7 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 
 		//Create the save button.  We use the image from the JLF
 		//Graphics Repository (but we extracted it from the jar).
-		exitButton = new JButton("Close");
+		exitButton = new JButton("Save & Close");
 		exitButton.addActionListener(this);
 
 		//For layout purposes, put the buttons in a separate panel
@@ -86,24 +93,32 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		return lastSheetString;
 	}
 
-	public void initEmployeeLists(XSSFWorkbook workbook) {
+	public void initEmployeeGroups(XSSFWorkbook workbook) {
+		// check if there's a roster sheet already
 		String lastSheetString = getLastSheetName(workbook);
+		// if there is, go to town initializing stuff
 		if (lastSheetString.equals("Roster")) {
-			System.out.println("found a Roster, populating GUI lists");
-			XSSFSheet rosterSheet = workbook.getSheet(lastSheetString);
-			int numTemplates = workbook.getNumberOfSheets() - 1;
-			System.out.println(numTemplates);
 
+			// get the roster sheet
+			XSSFSheet rosterSheet = workbook.getSheet("Roster");
+			// and the number of template sheets in the workbook
+			Integer numTemplates = workbook.getNumberOfSheets() - 1;
+
+			// Loop though all cells in the current row and get the cell in the
+			// row directly below to parse into our employee list
 			int count = 0;
 			while (count < numTemplates) {
-				System.out.println("yay" + count);
-				EmployeeList el = new EmployeeList();
+				// create new employeeGroup
+				EmployeeGroup el = new EmployeeGroup();
+				// add the new group to the groupList so we can serialize it later
+				employeeGroupList.addElement(el);
 
+				// If there's data in the row it's expecting the data in
 				XSSFRow rosterSheetNameRow = rosterSheet.getRow(count*2);
-				// Loop though all cells in the current row and get the cell in the
-				// row directly below to parse into our employee list
 				if (rosterSheetNameRow != null)
 				{
+					// Then loop through all the cells in that row
+					// parsing the data into our new group
 					for (Cell nameCell : rosterSheetNameRow) {
 						DataFormatter df = new DataFormatter();
 						String IDString = "";
@@ -119,40 +134,29 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 							XSSFCell IDCell = IDRow.getCell(IDColIndex);
 							IDString = df.formatCellValue(IDCell);
 						}
-
 						el.addEmployee(nameString, IDString);
 					}
 				}
-
 				add(el);
 				this.revalidate();
 				count++;
 			}
 
-			try {
-				// System.out.println(cell.getStringCellValue());
-				// listModel.addElement(cell.getStringCellValue());
-			} catch (IllegalStateException e) {
-				// System.out.println((int)cell.getNumericCellValue());
-				// listModel.addElement(cell.getNumericCellValue());
-			} finally {
-			}
-
 		} else {
-			System.out.println("!found a Roster, creating");
+			// Didn't find a roster sheet?  Create it and recurse
 			workbook.createSheet("Roster");
-			int numTemplates = workbook.getNumberOfSheets() - 1;
-
-			int count = 0;
-			while (count < numTemplates) {
-				System.out.println("yay" + count);
-				count++;
-			}
+			initEmployeeGroups(workbook);
 		}
 	}
 
+	public void serializeGroupList () {
+		Integer i = employeeGroupList.size();
+		System.out.println(i);
+
+	}
+
 	public void actionPerformed(ActionEvent e) {
-		//Handle open button actionm.
+		//Handle open button action
 		if (e.getSource() == openButton) {
 
 			fc.setCurrentDirectory(new java.io.File("").getAbsoluteFile());
@@ -161,10 +165,15 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 				File file = fc.getSelectedFile();
 				try {
 
-					XSSFWorkbook wb = readExcelFile(file);
-					initEmployeeLists(wb);
-					writeExcelFile(wb);
+					// this is the global private instance variable
+					workbook = readExcelFile(file);
+					// empty the groupList so we can re-initialize it
+					employeeGroupList.removeAllElements();
+					// init that shit!!
+					initEmployeeGroups(workbook);
 
+					// TODO Not doing much here.. should probably do something about this
+					// like show some error boxes if it's not an xlsx file or something
 				} catch (IOException ioe) {
 				} catch (InvalidFormatException ife) {
 				} finally {
@@ -174,6 +183,7 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 
 			//Handle exit button action.
 		} else if (e.getSource() == exitButton) {
+			serializeGroupList();
 			System.exit(0);
 		}
 	}
