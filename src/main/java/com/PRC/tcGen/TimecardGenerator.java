@@ -99,26 +99,30 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 				System.out.println("yay" + count);
 				EmployeeList el = new EmployeeList();
 
-				try
+				XSSFRow rosterSheetNameRow = rosterSheet.getRow(count*2);
+				// Loop though all cells in the current row and get the cell in the
+				// row directly below to parse into our employee list
+				if (rosterSheetNameRow != null)
 				{
-					XSSFRow rosterSheetNameRow = rosterSheet.getRow(count*2);
-					// Loop though all cells in the current row and get the cell in the 
-					// row directly below to parse into our employee list
 					for (Cell nameCell : rosterSheetNameRow) {
 						DataFormatter df = new DataFormatter();
+						String IDString = "";
 
+						// Produce name string from cell, always exists
+						String nameString = nameCell.getStringCellValue();
+
+						// Produce ID string from cell, if one exists
 						XSSFRow IDRow = rosterSheet.getRow((count*2) + 1);
 						Integer IDColIndex = nameCell.getColumnIndex();
-						XSSFCell IDCell = IDRow.getCell(IDColIndex);
-
-						String IDString = df.formatCellValue(IDCell);
-						String nameString = nameCell.getStringCellValue();
+						if (IDRow != null)
+						{
+							XSSFCell IDCell = IDRow.getCell(IDColIndex);
+							IDString = df.formatCellValue(IDCell);
+						}
 
 						el.addEmployee(nameString, IDString);
 					}
 				}
-				catch(NullPointerException e)
-				{System.out.println("whups, uninitialized list");}
 
 				add(el);
 				this.revalidate();
