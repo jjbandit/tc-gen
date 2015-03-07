@@ -4,10 +4,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
@@ -24,10 +24,11 @@ import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFPrintSetup;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.jdatepicker.JDatePicker;
 
 public class TimecardGenerator extends JPanel implements ActionListener {
 
@@ -38,7 +39,7 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 
 	BoxLayout layout;
 
-	JButton openButton, exitButton;
+	JButton openButton, exitButton, buildTimecardsButton;
 	JFileChooser fc;
 	DatePanel datePanel;
 
@@ -72,11 +73,16 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		exitButton = new JButton("Save & Close");
 		exitButton.addActionListener(this);
 
+		// Create the build button
+		buildTimecardsButton = new JButton("Build TCs");
+		buildTimecardsButton.addActionListener(this);
+
 		//For layout purposes, put the buttons in a separate panel
 		JPanel buttonPanel = new JPanel();
 		BoxLayout b = new BoxLayout(buttonPanel, BoxLayout.Y_AXIS);
 		buttonPanel.setLayout(b);
 		buttonPanel.add(openButton);
+		buttonPanel.add(buildTimecardsButton);
 		buttonPanel.add(exitButton);
 		buttonPanel.add(datePanel);
 
@@ -91,18 +97,25 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		return template;
 	}
 
-	public void writeExcelFile(XSSFWorkbook workbook)
-		throws IOException, InvalidFormatException {
+	public void writeExcelFile(XSSFWorkbook workbook) throws FileNotFoundException
+	{
 		FileOutputStream fileOut = new FileOutputStream(
-				"target/testWorkbook.xlsx");
-		workbook.write(fileOut);
-		workbook.close();
-		fileOut.close();
+			"target/testWorkbook.xlsx");
+		try {
+			workbook.write(fileOut);
+			workbook.close();
+			fileOut.close();
+		}
+		catch (IOException ex)
+		{}
+		finally
+		{}
+
 	}
 
 	private String getLastSheetName(XSSFWorkbook workbook) {
 		String lastSheetString = workbook.getSheetAt(
-				workbook.getNumberOfSheets() - 1).getSheetName();
+			workbook.getNumberOfSheets() - 1).getSheetName();
 		return lastSheetString;
 	}
 
@@ -223,6 +236,58 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		fileOut.close();
 	}
 
+	public void buildTimecards()
+	{
+		int index = 0;
+		int i = employeeGroupList.size();
+		// Loop through each group in the GroupList
+		while (index < i)
+		{
+			// get the template sheet for the current employee group
+
+			// get each employeeGroup in the groupList
+			EmployeeGroup group = employeeGroupList.elementAt(index);
+			DefaultListModel<Employee> employeeGroup = group.getModel();
+
+			// iterate through each employee
+			int numEmployees = employeeGroup.size();
+			int count = 0;
+			while (count < numEmployees)
+			{
+				String employeeName = employeeGroup.getElementAt(count).getName();
+				String employeeID = employeeGroup.getElementAt(count).getID();
+				XSSFSheet templateSheet = workbook.cloneSheet(index);
+				templateSheet.getPrintSetup().setLandscape(true);
+				templateSheet.getPrintSetup().setPaperSize(XSSFPrintSetup.LETTER_PAPERSIZE);
+				workbook.setSheetName(workbook.getNumberOfSheets() - 1, employeeName);
+				setEmployeeID(templateSheet, employeeID);
+				count++;
+			}
+			index++;
+		}
+
+
+		try{
+			writeExcelFile(workbook);
+		}
+		catch (FileNotFoundException ex)
+		{}
+
+
+
+
+
+	}
+
+	public void setEmployeeID (XSSFSheet sheet, String employeeID)
+	{
+		System.out.println(sheet);
+		Row row = sheet.createRow(2);
+		System.out.println(row);
+		Cell idCell = row.createCell(2);
+		idCell.setCellValue(employeeID);
+	}
+
 	public void actionPerformed(ActionEvent e) {
 		//Handle open button action
 		if (e.getSource() == openButton) {
@@ -242,15 +307,17 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 
 					// TODO Not doing much here.. should probably do something about this
 					// like show some error boxes if it's not an xlsx file or something
-				} catch (IOException ioe) {
-				} catch (InvalidFormatException ife) {
+				} catch (IOException ex) {
+				} catch (InvalidFormatException ex) {
 				} finally {
 				}
 			} else {
 			}
 
-			//Handle exit button action.
-		} else if (e.getSource() == exitButton) {
+
+			//Handle exit button action
+		} else if (e.getSource() == exitButton)
+		{
 			try
 			{
 				serializeGroupList();
@@ -258,6 +325,12 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 			catch (IOException ex)
 			{}
 			System.exit(0);
+
+
+			// Handle buildTC button
+		} else if (e.getSource() == buildTimecardsButton)
+		{
+			buildTimecards();
 		}
 	}
 
