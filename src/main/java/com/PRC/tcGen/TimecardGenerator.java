@@ -154,38 +154,43 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 
 	public void serializeGroupList () throws IOException
 	{
+		// We're going to completely remove the rosterSheet and insert a blank one
+		// because it's easier than iterating though all the cells and clearing them
+		int rosterSheetIndex = workbook.getNumberOfSheets() - 1;
+		workbook.removeSheetAt(rosterSheetIndex);
+		workbook.createSheet("Roster");
+
 		// Get the roster sheet
-		XSSFSheet rosterSheet = workbook.getSheet("Roster");
-		// And clear it so we don't get orphans in our list if
-		// we remove employees
-		Iterator<Row> itr = rosterSheet.iterator();
-		while (itr.hasNext())
-		{
-			itr.next();
-			itr.remove();
-		}
+		Sheet rosterSheet = workbook.getSheet("Roster");
 
 		int index = 0;
 		int i = employeeGroupList.size();
+		System.out.println(i);
 		// Loop through each group in the GroupList
-		while (index >= i)
+		while (index < i)
 		{
 			EmployeeGroup group = employeeGroupList.elementAt(index);
 			DefaultListModel<Employee> employeeList = group.getModel();
 
 			int numEmployees = employeeList.size();
 			int count = 0;
-			while (count >= numEmployees)
+			while (count < numEmployees)
 			{
+				System.out.println(")skjl;kdfsah");
+				System.out.println(count);
+				System.out.println(numEmployees);
 				String employeeName = employeeList.getElementAt(count).getName();
 				Row r = rosterSheet.getRow(index*2);
+				if (r==null){
+					r = rosterSheet.createRow(index*2);
+				}
+				System.out.println(r);
+				System.out.println(employeeName);
 				r.createCell(count).setCellValue(employeeName);
+				count++;
 			}
+			index++;
 		}
-
-		XSSFSheet sh = workbook.getSheet("Roster");
-		XSSFRow row = sh.createRow(0);
-		row.createCell(0).setCellValue("Wooo!");
 
 		FileOutputStream fileOut = new FileOutputStream("aNewWorkbook.xlsx");
 		workbook.write(fileOut);
@@ -226,6 +231,7 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 			}
 			catch (IOException ex)
 			{}
+			System.out.println("Exiting!");
 			System.exit(0);
 		}
 	}
