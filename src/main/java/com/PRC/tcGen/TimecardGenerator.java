@@ -36,12 +36,11 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 	private static JFrame frame;
 
 	// UI Junk
+	private BoxLayout layout;
 
-	BoxLayout layout;
-
-	JButton openButton, exitButton, buildTimecardsButton;
-	JFileChooser fc;
-	DatePanel datePanel;
+	private JButton openButton, exitButton, buildTimecardsButton;
+	private JFileChooser fc;
+	private DatePanel datePanel;
 
 	// keep track of what template were working from
 	private XSSFWorkbook workbook;
@@ -65,7 +64,6 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		datePanel = new DatePanel();
 
 		initButtonPanel();
-
 	}
 
 	public void initButtonPanel ()
@@ -142,38 +140,24 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 			// and the number of template sheets in the workbook
 			Integer numTemplates = workbook.getNumberOfSheets() - 1;
 
-			// Loop though all cells in the current row and get the cell in the
-			// row directly below to parse into our employee list
+			// Loop though all cells starting with the first row,
+			// get the cell in the row directly below
+			// parse into our employee list
 			int count = 0;
+			// for each template sheet skip to the next row of employees
 			while (count < numTemplates) {
-				// create new employeeGroup
+				// create new employeeGroup -- my gui class with an Employee model
 				EmployeeGroup el = new EmployeeGroup();
-				// add the new group to the groupList so we can serialize it later
+				// add the new group to a list for serializing the employees later
 				employeeGroupList.addElement(el);
 
-				// If there's data in the row it's expecting the data in
-				XSSFRow rosterSheetNameRow = rosterSheet.getRow(count*2);
-				if (rosterSheetNameRow != null)
+				// Get the row containing names for the current iteration
+				XSSFRow nameRow = rosterSheet.getRow(count*2);
+				XSSFRow IDRow = rosterSheet.getRow((count*2) + 1);
+
+				if (nameRow != null)
 				{
-					// Then loop through all the cells in that row
-					// parsing the data into our new group
-					for (Cell nameCell : rosterSheetNameRow) {
-						DataFormatter df = new DataFormatter();
-						String IDString = "";
-
-						// Produce name string from cell, always exists
-						String nameString = nameCell.getStringCellValue();
-
-						// Produce ID string from cell, if one exists
-						XSSFRow IDRow = rosterSheet.getRow((count*2) + 1);
-						Integer IDColIndex = nameCell.getColumnIndex();
-						if (IDRow != null)
-						{
-							XSSFCell IDCell = IDRow.getCell(IDColIndex);
-							IDString = df.formatCellValue(IDCell);
-						}
-						el.addEmployee(nameString, IDString);
-					}
+					addEmployeeDataToGroup(nameRow, IDRow, el);
 				}
 				add(el);
 				this.revalidate();
@@ -184,6 +168,28 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 			// Didn't find a roster sheet?  Create it and recurse
 			workbook.createSheet("Roster");
 			initEmployeeGroups(workbook);
+		}
+	}
+
+	public void addEmployeeDataToGroup (Row nameRow, Row IDRow, EmployeeGroup group)
+	{
+		// loop through all the cells in Row r
+		// parsing the data into the group
+		for (Cell nameCell : nameRow) {
+			DataFormatter df = new DataFormatter();
+			String IDString = "";
+
+			// Produce name string from cell, always exists
+			String nameString = nameCell.getStringCellValue();
+
+			// Produce ID string from cell, if one exists
+			Integer IDColIndex = nameCell.getColumnIndex();
+			if (IDRow != null)
+			{
+				Cell IDCell = IDRow.getCell(IDColIndex);
+				IDString = df.formatCellValue(IDCell);
+			}
+			group.addEmployee(nameString, IDString);
 		}
 	}
 
@@ -273,7 +279,7 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 				// Get the employee informatino
 				String employeeName = employeeGroup.getElementAt(count).getName();
 				String employeeID = employeeGroup.getElementAt(count).getID();
-				
+
 				// Set sheet fields
 				workbook.setSheetName(workbook.getNumberOfSheets() - 1, employeeName);
 				setEmployeeID(templateSheet, employeeID);
@@ -294,18 +300,11 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		}
 		catch (FileNotFoundException ex)
 		{}
-
-
-
-
-
 	}
 
 	public void setEmployeeID (XSSFSheet sheet, String employeeID)
 	{
-		System.out.println(sheet);
 		Row row = sheet.createRow(2);
-		System.out.println(row);
 		Cell idCell = row.createCell(2);
 		idCell.setCellValue(employeeID);
 	}
