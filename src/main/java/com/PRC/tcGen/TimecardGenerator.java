@@ -60,9 +60,16 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		//Create a file chooser
 		fc = new JFileChooser();
 
-		// Create the date picker
+		// Create the date picker -- my custom class to initialize
+		// the date picker ui element
 		datePanel = new DatePanel();
 
+		initButtonPanel();
+
+	}
+
+	public void initButtonPanel ()
+	{
 		//Create the open button.  We use the image from the JLF
 		//Graphics Repository (but we extracted it from the jar).
 		openButton = new JButton("Open a File...");
@@ -124,6 +131,11 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		String lastSheetString = getLastSheetName(workbook);
 		// if there is, go to town initializing stuff
 		if (lastSheetString.equals("Roster")) {
+
+			// clear container
+			removeAll();
+			//Add the buttons back in
+			initButtonPanel();
 
 			// get the roster sheet
 			XSSFSheet rosterSheet = workbook.getSheet("Roster");
@@ -243,8 +255,6 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		// Loop through each group in the GroupList
 		while (index < i)
 		{
-			// get the template sheet for the current employee group
-
 			// get each employeeGroup in the groupList
 			EmployeeGroup group = employeeGroupList.elementAt(index);
 			DefaultListModel<Employee> employeeGroup = group.getModel();
@@ -254,18 +264,30 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 			int count = 0;
 			while (count < numEmployees)
 			{
-				String employeeName = employeeGroup.getElementAt(count).getName();
-				String employeeID = employeeGroup.getElementAt(count).getID();
+				// get the template sheet for the current employee group
 				XSSFSheet templateSheet = workbook.cloneSheet(index);
 				templateSheet.getPrintSetup().setLandscape(true);
 				templateSheet.getPrintSetup().setPaperSize(XSSFPrintSetup.LETTER_PAPERSIZE);
+				templateSheet.getPrintSetup().setScale((short)80);
+
+				// Get the employee informatino
+				String employeeName = employeeGroup.getElementAt(count).getName();
+				String employeeID = employeeGroup.getElementAt(count).getID();
+				
+				// Set sheet fields
 				workbook.setSheetName(workbook.getNumberOfSheets() - 1, employeeName);
 				setEmployeeID(templateSheet, employeeID);
 				count++;
 			}
 			index++;
 		}
-
+		// Remove template sheets and roster
+		int count = 0;
+		while (count <= i)
+		{
+			workbook.removeSheetAt(0);
+			count++;
+		}
 
 		try{
 			writeExcelFile(workbook);
