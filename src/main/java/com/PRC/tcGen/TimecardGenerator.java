@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Calendar;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
@@ -280,8 +281,43 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		setEmployeeData(employeeName, employeeID, templateSheet);
 	}
 
+	public void dateTemplateSheets(Workbook wb)
+	{
+		int numTemplates = wb.getNumberOfSheets() - 1;
+		int[] dateRows = new int[] {7, 10, 13, 16, 19, 22, 25, 28};
+		int[] daysOfWeek = new int[] {6, 7, 8, 9, 10, 11, 12};
+
+		// Yikes ..
+		int index = 0;
+		while (index < numTemplates)
+		{
+			// get date to use
+			int dayOfWeek = datePanel.getDate();
+			// set period fields
+			wb.getSheetAt(index).getRow(1).getCell(10).setCellValue(datePanel.getCal());
+
+			for (int dow : daysOfWeek)
+			{
+				for (int i : dateRows)
+				{
+					Sheet s = wb.getSheetAt(index);
+					s.getRow(i).getCell(dow).setCellValue(dayOfWeek);
+				}
+				dayOfWeek++;
+			}
+			Calendar c = (Calendar) datePanel.getCal().clone();
+			c.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
+			wb.getSheetAt(index).getRow(1).getCell(12).setCellValue(c);
+			index++;
+		}
+	}
+
+
 	public void buildTimecards()
 	{
+		// First we insert date runs into the template cards
+		dateTemplateSheets(outBook);
+
 		int index = 0;
 		int numTemplates = employeeGroupList.size();
 		// Loop through each group in the GroupList

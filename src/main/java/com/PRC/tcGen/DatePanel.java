@@ -1,6 +1,7 @@
 package com.PRC.tcGen;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Properties;
 
@@ -10,19 +11,20 @@ import org.jdatepicker.impl.DateComponentFormatter;
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
+import org.jdatepicker.impl.UtilCalendarModel;
 
 public class DatePanel extends JPanel
 {
 	private static final long serialVersionUID = 1L;
 
-	private UtilDateModel dateModel;
+	private UtilCalendarModel dateModel;
 	private JDatePanelImpl datePanel;
 	private JDatePickerImpl datePicker;
 	private Properties p;
 
 	public DatePanel ()
 	{
-		dateModel = new UtilDateModel();
+		dateModel = new UtilCalendarModel();
 		setDateModelNextSunday(dateModel);
 		dateModel.setSelected(true);
 		p = new Properties();
@@ -38,7 +40,17 @@ public class DatePanel extends JPanel
 		add(datePicker);
 	}
 
-	private void setDateModelNextSunday (UtilDateModel dateModel)
+	public int getDate()
+	{
+		return dateModel.getDay();
+	}
+
+	public Calendar getCal()
+	{
+		return dateModel.getValue();
+	}
+
+	private void setDateModelNextSunday (UtilCalendarModel dateModel)
 	{
 		Calendar now = new GregorianCalendar();
 		Calendar nextSunday = new GregorianCalendar(
