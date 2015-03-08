@@ -43,13 +43,16 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 	private DatePanel datePanel;
 
 	// keep track of what template were working from
-	private XSSFWorkbook workbook;
+	private XSSFWorkbook templateBook;
+
+	// keep track of the workbook we're building
+	private XSSFWorkbook outBook;
 
 	// Create a model to keep track of the number of employee groups initialized
 	private DefaultListModel<EmployeeGroup> employeeGroupList;
 
-	public TimecardGenerator() {
-
+	public TimecardGenerator()
+	{
 		// Initialize a list to keep track of how many groups there are
 		employeeGroupList = new DefaultListModel<EmployeeGroup>();
 
@@ -118,13 +121,15 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 
 	}
 
-	private String getLastSheetName(XSSFWorkbook workbook) {
+	private String getLastSheetName(XSSFWorkbook workbook)
+	{
 		String lastSheetString = workbook.getSheetAt(
 			workbook.getNumberOfSheets() - 1).getSheetName();
 		return lastSheetString;
 	}
 
-	public void initEmployeeGroups(XSSFWorkbook workbook) {
+	public void initEmployeeGroups(XSSFWorkbook workbook)
+	{
 		// check if there's a roster sheet already
 		String lastSheetString = getLastSheetName(workbook);
 		// if there is, go to town initializing stuff
@@ -197,16 +202,16 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		throws IOException
 	{
 		// return out if there's no workbook to serialize to
-		if (workbook == null) {return;}
+		if (templateBook == null) {return;}
 
 		// We're going to completely remove the rosterSheet and insert a blank one
 		// because it's easier than iterating though all the cells and clearing them
-		int rosterSheetIndex = workbook.getNumberOfSheets() - 1;
-		workbook.removeSheetAt(rosterSheetIndex);
-		workbook.createSheet("Roster");
+		int rosterSheetIndex = templateBook.getNumberOfSheets() - 1;
+		templateBook.removeSheetAt(rosterSheetIndex);
+		templateBook.createSheet("Roster");
 
 		// Get the roster sheet
-		Sheet rosterSheet = workbook.getSheet("Roster");
+		Sheet rosterSheet = templateBook.getSheet("Roster");
 
 		int index = 0;
 		int i = employeeGroupList.size();
@@ -250,16 +255,16 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 
 		// Save that shit!
 		FileOutputStream fileOut = new FileOutputStream("aNewWorkbook.xlsx");
-		workbook.write(fileOut);
+		templateBook.write(fileOut);
 		fileOut.close();
 	}
 
 	public void buildTimecards()
 	{
 		int index = 0;
-		int i = employeeGroupList.size();
+		int numTemplates = employeeGroupList.size();
 		// Loop through each group in the GroupList
-		while (index < i)
+		while (index < numTemplates)
 		{
 			// get each employeeGroup in the groupList
 			EmployeeGroup group = employeeGroupList.elementAt(index);
@@ -271,7 +276,7 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 			while (count < numEmployees)
 			{
 				// get the template sheet for the current employee group
-				XSSFSheet templateSheet = workbook.cloneSheet(index);
+				Sheet templateSheet = outBook.cloneSheet(index);
 				templateSheet.getPrintSetup().setLandscape(true);
 				templateSheet.getPrintSetup().setPaperSize(XSSFPrintSetup.LETTER_PAPERSIZE);
 				templateSheet.getPrintSetup().setScale((short)80);
@@ -281,53 +286,63 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 				String employeeID = employeeGroup.getElementAt(count).getID();
 
 				// Set sheet fields
-				workbook.setSheetName(workbook.getNumberOfSheets() - 1, employeeName);
-				setEmployeeID(templateSheet, employeeID);
+				outBook.setSheetName(outBook.getNumberOfSheets() - 1, employeeName);
+				setEmployeeData(employeeName, employeeID, templateSheet);
 				count++;
 			}
 			index++;
 		}
 		// Remove template sheets and roster
 		int count = 0;
-		while (count <= i)
+		while (count <= numTemplates)
 		{
-			workbook.removeSheetAt(0);
+			outBook.removeSheetAt(0);
 			count++;
 		}
 
 		try{
-			writeExcelFile(workbook);
+			writeExcelFile(outBook);
 		}
 		catch (FileNotFoundException ex)
 		{}
 	}
 
-	public void setEmployeeID (XSSFSheet sheet, String employeeID)
+	public void setEmployeeData (String employeeName, String employeeID, Sheet sheet)
 	{
-		Row row = sheet.createRow(2);
-		Cell idCell = row.createCell(2);
+		Row nameRow = sheet.getRow(3);
+		Cell nameCell = nameRow.getCell(2);
+		nameCell.setCellValue(employeeName);
+
+		Row idRow = sheet.getRow(2);
+		Cell idCell = idRow.getCell(2);
 		idCell.setCellValue(employeeID);
 	}
 
-	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(ActionEvent e)
+	{
 		//Handle open button action
 		if (e.getSource() == openButton) {
 
+			// set current directory to where the file was run from
 			fc.setCurrentDirectory(new java.io.File("").getAbsoluteFile());
+
+			// Open the filechooser
 			int returnVal = fc.showOpenDialog(TimecardGenerator.this);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				File file = fc.getSelectedFile();
 				try {
 
-					// this is the global private instance variable
-					workbook = readExcelFile(file);
+					// Set workbook objects
+					templateBook = readExcelFile(file);
+					outBook = readExcelFile(file);
+
 					// empty the groupList so we can re-initialize it
 					employeeGroupList.removeAllElements();
-					// init that shit!!
-					initEmployeeGroups(workbook);
+					// init that shit!
+					initEmployeeGroups(templateBook);
 
 					// TODO Not doing much here.. should probably do something about this
-					// like show some error boxes if it's not an xlsx file or something
+					// like show some error boxes if it's not an xlsx file or whatever
 				} catch (IOException ex) {
 				} catch (InvalidFormatException ex) {
 				} finally {
@@ -360,7 +375,8 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 	* this method should be invoked from the
 	* event dispatch thread.
 	*/
-	private static void createAndShowGUI() {
+	private static void createAndShowGUI()
+	{
 		//Create and set up the window.
 		frame = new JFrame("TimecardGenerator");
 				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -373,15 +389,16 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 				frame.setVisible(true);
 		}
 
-		public static void main(String[] args) {
-				//Schedule a job for the event dispatch thread:
-				//creating and showing this application's GUI.
-				SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-								//Turn off metal's use of bold fonts
-								UIManager.put("swing.boldMetal", Boolean.FALSE);
-								createAndShowGUI();
-						}
-				});
-		}
+	public static void main(String[] args)
+	{
+			//Schedule a job for the event dispatch thread:
+			//creating and showing this application's GUI.
+			SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+							//Turn off metal's use of bold fonts
+							UIManager.put("swing.boldMetal", Boolean.FALSE);
+							createAndShowGUI();
+					}
+			});
+	}
 }
