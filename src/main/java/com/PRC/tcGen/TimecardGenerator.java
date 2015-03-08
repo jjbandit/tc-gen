@@ -23,6 +23,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFPrintSetup;
@@ -30,9 +31,10 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-public class TimecardGenerator extends JPanel implements ActionListener {
-
+public class TimecardGenerator extends JPanel implements ActionListener
+{
 	private static final long serialVersionUID = -867058275401540869L;
+
 	private static JFrame frame;
 
 	// UI Junk
@@ -99,13 +101,15 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 	}
 
 	public XSSFWorkbook readExcelFile(File timecardTemplateFile)
-		throws IOException, InvalidFormatException {
+		throws IOException, InvalidFormatException
+	{
 		InputStream stream = new FileInputStream(timecardTemplateFile);
 		XSSFWorkbook template = new XSSFWorkbook(stream);
 		return template;
 	}
 
-	public void writeExcelFile(XSSFWorkbook workbook) throws FileNotFoundException
+	public void writeExcelFile(XSSFWorkbook workbook)
+		throws FileNotFoundException
 	{
 		FileOutputStream fileOut = new FileOutputStream(
 			"target/testWorkbook.xlsx");
@@ -259,6 +263,23 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 		fileOut.close();
 	}
 
+	public void addEmployeeToBook (Employee employee, Workbook workbook, int templateSheetIndex)
+	{
+		// get the template sheet for the current employee group
+		Sheet templateSheet = workbook.cloneSheet(templateSheetIndex);
+		templateSheet.getPrintSetup().setLandscape(true);
+		templateSheet.getPrintSetup().setPaperSize(XSSFPrintSetup.LETTER_PAPERSIZE);
+		templateSheet.getPrintSetup().setScale((short)80);
+
+		// Get the employee informatino
+		String employeeName = employee.getName();
+		String employeeID = employee.getID();
+
+		// Set sheet fields
+		workbook.setSheetName(outBook.getNumberOfSheets() - 1, employeeName);
+		setEmployeeData(employeeName, employeeID, templateSheet);
+	}
+
 	public void buildTimecards()
 	{
 		int index = 0;
@@ -275,19 +296,8 @@ public class TimecardGenerator extends JPanel implements ActionListener {
 			int count = 0;
 			while (count < numEmployees)
 			{
-				// get the template sheet for the current employee group
-				Sheet templateSheet = outBook.cloneSheet(index);
-				templateSheet.getPrintSetup().setLandscape(true);
-				templateSheet.getPrintSetup().setPaperSize(XSSFPrintSetup.LETTER_PAPERSIZE);
-				templateSheet.getPrintSetup().setScale((short)80);
-
-				// Get the employee informatino
-				String employeeName = employeeGroup.getElementAt(count).getName();
-				String employeeID = employeeGroup.getElementAt(count).getID();
-
-				// Set sheet fields
-				outBook.setSheetName(outBook.getNumberOfSheets() - 1, employeeName);
-				setEmployeeData(employeeName, employeeID, templateSheet);
+				Employee e = employeeGroup.getElementAt(count);
+				addEmployeeToBook(e, outBook, index);
 				count++;
 			}
 			index++;
