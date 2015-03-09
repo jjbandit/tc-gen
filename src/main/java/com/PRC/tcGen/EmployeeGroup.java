@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -20,14 +21,18 @@ public class EmployeeGroup extends JPanel implements ActionListener
 	private DefaultListModel<Employee> employeeGroupModel;
 	private JList<Employee> employeeJList;
 
-
-	private JButton addEmployeeButton;
+	private JLabel listLabel;
+	private JButton addEmployeeButton, removeEmployeeButton;
 	private JTextField newEmployeeName, newEmployeeID;
 
-	public EmployeeGroup () {
+	public EmployeeGroup (String label) {
 
 		BoxLayout layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 		setLayout(layout);
+
+		listLabel = new JLabel(label);
+		JLabel nameLabel = new JLabel("Employee Name");
+		JLabel idLabel = new JLabel("Employee ID");
 
 		//Create Model and JList
 		employeeGroupModel = new DefaultListModel<Employee>();
@@ -48,13 +53,24 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		addEmployeeButton = new JButton("+");
 		addEmployeeButton.addActionListener(this);
 
+		removeEmployeeButton = new JButton("-");
+		removeEmployeeButton.addActionListener(this);
+
+		// Group add and remove buttons
+		JPanel addRemoveButtons = new JPanel();
+		addRemoveButtons.add(addEmployeeButton);
+		addRemoveButtons.add(removeEmployeeButton);
+
+		this.add(listLabel);
 		this.add(employeeGroupPane);
+		this.add(nameLabel);
 		this.add(newEmployeeName);
+		this.add(idLabel);
 		this.add(newEmployeeID);
-		this.add(addEmployeeButton);
+		this.add(addRemoveButtons);
 	}
 
-	public void addEmployee(String employeeName, String employeeID)
+	public void addEmployee(String employeeName, Integer employeeID)
 	{
 		Employee employee = new Employee(employeeName, employeeID);
 		employeeGroupModel.addElement(employee);
@@ -68,12 +84,16 @@ public class EmployeeGroup extends JPanel implements ActionListener
 	public void actionPerformed(ActionEvent e)
 	{
 
-		if(e.getSource() == addEmployeeButton)
+		if (e.getSource() == addEmployeeButton)
 		{
 			String emName = newEmployeeName.getText();
-			String emID = newEmployeeID.getText();
+			int emID = Integer.parseInt(newEmployeeID.getText());
 			Employee employee = new Employee(emName, emID);
 			employeeGroupModel.addElement(employee);
+		}
+		else if (e.getSource() == removeEmployeeButton)
+		{
+			employeeGroupModel.removeElement(employeeJList.getSelectedValue());
 		}
 	}
 }

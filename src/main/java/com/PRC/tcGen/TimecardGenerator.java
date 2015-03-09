@@ -1,5 +1,6 @@
 package com.PRC.tcGen;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -10,12 +11,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -25,8 +29,6 @@ import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFPrintSetup;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -65,10 +67,6 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		//Create a file chooser
 		fc = new JFileChooser();
 
-		// Create the date picker -- my custom class to initialize
-		// the date picker ui element
-		datePanel = new DatePanel();
-
 		initButtonPanel();
 	}
 
@@ -88,17 +86,84 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		buildTimecardsButton = new JButton("Build TCs");
 		buildTimecardsButton.addActionListener(this);
 
+		// Create the date picker -- my custom class to initialize
+		// the date picker ui element
+		datePanel = new DatePanel();
+
 		//For layout purposes, put the buttons in a separate panel
-		JPanel buttonPanel = new JPanel();
-		BoxLayout b = new BoxLayout(buttonPanel, BoxLayout.Y_AXIS);
-		buttonPanel.setLayout(b);
-		buttonPanel.add(openButton);
-		buttonPanel.add(buildTimecardsButton);
-		buttonPanel.add(exitButton);
-		buttonPanel.add(datePanel);
+		Box vBox = Box.createVerticalBox();
+
+		vBox.add(Box.createVerticalStrut(15));
+		openButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+		vBox.add(openButton);
+
+		vBox.add(Box.createVerticalStrut(15));
+		buildTimecardsButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+		vBox.add(buildTimecardsButton);
+
+		vBox.add(Box.createVerticalStrut(15));
+		exitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+		vBox.add(exitButton);
+
+		vBox.add(Box.createVerticalStrut(15));
+		datePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		vBox.add(datePanel);
 
 		//Add the buttons and the log to this panel.
-		add(buttonPanel);
+		add(vBox);
+	}
+
+	public void initEmployeeGroups(XSSFWorkbook workbook)
+	{
+		// check if there's a roster sheet already
+		String lastSheetString = getLastSheetName(workbook);
+		// if there is, go to town initializing stuff
+		if (lastSheetString.equals("Roster")) {
+
+			// clear container
+			removeAll();
+			//Add the buttons back in
+			initButtonPanel();
+			// Add a separator :)
+			add(Box.createHorizontalStrut(10));
+
+			// get the roster sheet
+			XSSFSheet rosterSheet = workbook.getSheet("Roster");
+			// and the number of template sheets in the workbook
+			Integer numTemplates = workbook.getNumberOfSheets() - 1;
+
+			// Loop though all cells starting with the first row,
+			// get the cell in the row directly below
+			// parse into our employee list
+			int count = 0;
+			// for each template sheet skip to the next row of employees
+			while (count < numTemplates) {
+				String groupLabel = templateBook.getSheetName(count);
+				// create new employeeGroup -- my gui class with an Employee model
+				EmployeeGroup el = new EmployeeGroup(groupLabel);
+				// add the new group to a list for serializing the employees later
+				employeeGroupList.addElement(el);
+
+				// Get the row containing names for the current iteration
+				XSSFRow nameRow = rosterSheet.getRow(count*2);
+				XSSFRow IDRow = rosterSheet.getRow((count*2) + 1);
+
+				if (nameRow != null)
+				{
+					addEmployeeDataToGroup(nameRow, IDRow, el);
+				}
+				add(el);
+				add(Box.createHorizontalStrut(3));
+				this.revalidate();
+				count++;
+			}
+
+		} else {
+			// Didn't find a roster sheet?  Create it and recurse
+			workbook.createSheet("Roster");
+			initEmployeeGroups(workbook);
+		}
+		frame.pack();
 	}
 
 	public XSSFWorkbook readExcelFile(File timecardTemplateFile)
@@ -133,61 +198,12 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		return lastSheetString;
 	}
 
-	public void initEmployeeGroups(XSSFWorkbook workbook)
-	{
-		// check if there's a roster sheet already
-		String lastSheetString = getLastSheetName(workbook);
-		// if there is, go to town initializing stuff
-		if (lastSheetString.equals("Roster")) {
-
-			// clear container
-			removeAll();
-			//Add the buttons back in
-			initButtonPanel();
-
-			// get the roster sheet
-			XSSFSheet rosterSheet = workbook.getSheet("Roster");
-			// and the number of template sheets in the workbook
-			Integer numTemplates = workbook.getNumberOfSheets() - 1;
-
-			// Loop though all cells starting with the first row,
-			// get the cell in the row directly below
-			// parse into our employee list
-			int count = 0;
-			// for each template sheet skip to the next row of employees
-			while (count < numTemplates) {
-				// create new employeeGroup -- my gui class with an Employee model
-				EmployeeGroup el = new EmployeeGroup();
-				// add the new group to a list for serializing the employees later
-				employeeGroupList.addElement(el);
-
-				// Get the row containing names for the current iteration
-				XSSFRow nameRow = rosterSheet.getRow(count*2);
-				XSSFRow IDRow = rosterSheet.getRow((count*2) + 1);
-
-				if (nameRow != null)
-				{
-					addEmployeeDataToGroup(nameRow, IDRow, el);
-				}
-				add(el);
-				this.revalidate();
-				count++;
-			}
-
-		} else {
-			// Didn't find a roster sheet?  Create it and recurse
-			workbook.createSheet("Roster");
-			initEmployeeGroups(workbook);
-		}
-	}
-
 	public void addEmployeeDataToGroup (Row nameRow, Row IDRow, EmployeeGroup group)
 	{
 		// loop through all the cells in Row r
 		// parsing the data into the group
 		for (Cell nameCell : nameRow) {
-			DataFormatter df = new DataFormatter();
-			String IDString = "";
+			int employeeID;
 
 			// Produce name string from cell, always exists
 			String nameString = nameCell.getStringCellValue();
@@ -197,9 +213,9 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			if (IDRow != null)
 			{
 				Cell IDCell = IDRow.getCell(IDColIndex);
-				IDString = df.formatCellValue(IDCell);
+				employeeID = (int) IDCell.getNumericCellValue();
+				group.addEmployee(nameString, employeeID);
 			}
-			group.addEmployee(nameString, IDString);
 		}
 	}
 
@@ -233,7 +249,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			while (count < numEmployees)
 			{
 				String employeeName = employeeGroup.getElementAt(count).getName();
-				String employeeID = employeeGroup.getElementAt(count).getID();
+				int employeeID = employeeGroup.getElementAt(count).getID();
 
 				// Set or create new row for employee names
 				Row nameRow = rosterSheet.getRow(index*2);
@@ -274,7 +290,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 
 		// Get the employee informatino
 		String employeeName = employee.getName();
-		String employeeID = employee.getID();
+		int employeeID = employee.getID();
 
 		// Set sheet fields
 		workbook.setSheetName(outBook.getNumberOfSheets() - 1, employeeName);
@@ -311,7 +327,6 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			index++;
 		}
 	}
-
 
 	public void buildTimecards()
 	{
@@ -353,7 +368,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		{}
 	}
 
-	public void setEmployeeData (String employeeName, String employeeID, Sheet sheet)
+	public void setEmployeeData (String employeeName, int employeeID, Sheet sheet)
 	{
 		Row nameRow = sheet.getRow(3);
 		Cell nameCell = nameRow.getCell(2);
@@ -429,6 +444,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 
 				//Add content to the window.
 				frame.add(new TimecardGenerator());
+				// frame.setSize(300, 200);
 
 				//Display the window.
 				frame.pack();

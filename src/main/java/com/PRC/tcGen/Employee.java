@@ -2,9 +2,9 @@ package com.PRC.tcGen;
 public class Employee
 {
 	private String employeeName;
-	private String employeeID;
+	private int employeeID;
 
-	public Employee(String name, String ID)
+	public Employee(String name, Integer ID)
 	{
 		this.employeeName = name;
 		this.employeeID = ID;
@@ -14,7 +14,7 @@ public class Employee
 	{
 		return this.employeeName;
 	}
-	public String getID ()
+	public int getID ()
 	{
 		return this.employeeID;
 	}
