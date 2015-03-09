@@ -2,6 +2,7 @@ package com.PRC.tcGen;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -10,6 +11,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -25,11 +27,11 @@ public class EmployeeGroup extends JPanel implements ActionListener
 	private JList<Employee> employeeJList;
 
 	private JLabel listLabel, nameLabel, idLabel;
-	private JButton addEmployeeButton, removeEmployeeButton;
+	private JButton addEmployeeButton, removeEmployeeButton, removeListButton;
 	private JTextField newEmployeeName, newEmployeeID;
 
-	public EmployeeGroup (String label) {
-
+	public EmployeeGroup (String label)
+	{
 		BoxLayout layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 		setLayout(layout);
 
@@ -59,12 +61,21 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		removeEmployeeButton = new JButton("-");
 		removeEmployeeButton.addActionListener(this);
 
+		removeListButton = new JButton("X");
+		removeListButton.setMargin(new Insets(0,3,0,3));
+		removeListButton.addActionListener(this);
+
+		// Group label and removeList buttons
+		JPanel header = new JPanel();
+		header.add(listLabel);
+		header.add(removeListButton);
+
 		// Group add and remove buttons
 		JPanel addRemoveButtons = new JPanel();
 		addRemoveButtons.add(addEmployeeButton);
 		addRemoveButtons.add(removeEmployeeButton);
 
-		this.add(listLabel);
+		this.add(header);
 		this.add(employeeGroupPane);
 		this.add(nameLabel);
 		this.add(newEmployeeName);
@@ -100,10 +111,10 @@ public class EmployeeGroup extends JPanel implements ActionListener
 				nameLabel.setForeground(Color.BLACK);
 			}
 
-
 			// Validate the employee id is an integer
 			int emID = 0;
-			try {
+			try
+			{
 				emID = Integer.parseInt(newEmployeeID.getText());
 				idLabel.setForeground(Color.BLACK);
 			}
@@ -122,6 +133,20 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		else if (e.getSource() == removeEmployeeButton)
 		{
 			employeeGroupModel.removeElement(employeeJList.getSelectedValue());
+		}
+		else if (e.getSource() == removeListButton)
+		{
+			int confirm = JOptionPane.showConfirmDialog(
+				this.getParent(),
+				"Remove this template and it's staff members?",
+				"Confirm",
+				JOptionPane.YES_NO_OPTION);
+			if (confirm == JOptionPane.YES_OPTION)
+			{
+				System.out.println("Wahoo");
+			} else {
+				System.out.println("Booo!");
+			}
 		}
 	}
 }
