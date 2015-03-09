@@ -1,5 +1,6 @@
 package com.PRC.tcGen;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,6 +15,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+
 public class EmployeeGroup extends JPanel implements ActionListener
 {
 	private static final long serialVersionUID = -6932061067756922392L;
@@ -21,7 +24,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 	private DefaultListModel<Employee> employeeGroupModel;
 	private JList<Employee> employeeJList;
 
-	private JLabel listLabel;
+	private JLabel listLabel, nameLabel, idLabel;
 	private JButton addEmployeeButton, removeEmployeeButton;
 	private JTextField newEmployeeName, newEmployeeID;
 
@@ -31,8 +34,8 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		setLayout(layout);
 
 		listLabel = new JLabel(label);
-		JLabel nameLabel = new JLabel("Employee Name");
-		JLabel idLabel = new JLabel("Employee ID");
+		nameLabel = new JLabel("Employee Name");
+		idLabel = new JLabel("Employee ID");
 
 		//Create Model and JList
 		employeeGroupModel = new DefaultListModel<Employee>();
@@ -86,10 +89,35 @@ public class EmployeeGroup extends JPanel implements ActionListener
 
 		if (e.getSource() == addEmployeeButton)
 		{
+			// Validate name is not null
 			String emName = newEmployeeName.getText();
-			int emID = Integer.parseInt(newEmployeeID.getText());
-			Employee employee = new Employee(emName, emID);
-			employeeGroupModel.addElement(employee);
+			if (emName.isEmpty())
+			{
+				nameLabel.setForeground(Color.RED);
+			}
+			else
+			{
+				nameLabel.setForeground(Color.BLACK);
+			}
+
+
+			// Validate the employee id is an integer
+			int emID = 0;
+			try {
+				emID = Integer.parseInt(newEmployeeID.getText());
+				idLabel.setForeground(Color.BLACK);
+			}
+			catch (NumberFormatException ex)
+			{
+				idLabel.setForeground(Color.RED);
+			}
+
+			// Wow this is ugly!
+		if (!emName.isEmpty() && emID > 0)
+			{
+				Employee employee = new Employee(emName, emID);
+				employeeGroupModel.addElement(employee);
+			}
 		}
 		else if (e.getSource() == removeEmployeeButton)
 		{
