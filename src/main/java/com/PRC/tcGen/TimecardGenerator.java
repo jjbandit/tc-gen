@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import javax.swing.Box;
@@ -18,14 +19,11 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -40,6 +38,14 @@ public class TimecardGenerator extends JPanel implements ActionListener
 
 	private static JFrame frame;
 
+	// keep track of what template were working from
+	public XSSFWorkbook templateBook;
+
+	// Create a model to keep track of the number of employee groups initialized
+	public DefaultListModel<EmployeeGroup> employeeGroupList;
+
+	private String templateFileDir, templateFileName;
+
 	// UI Junk
 	private BoxLayout layout;
 
@@ -47,14 +53,8 @@ public class TimecardGenerator extends JPanel implements ActionListener
 	private JFileChooser fc;
 	private DatePanel datePanel;
 
-	// keep track of what template were working from
-	public XSSFWorkbook templateBook;
-
 	// keep track of the workbook we're building
 	private XSSFWorkbook outBook;
-
-	// Create a model to keep track of the number of employee groups initialized
-	public DefaultListModel<EmployeeGroup> employeeGroupList;
 
 	public TimecardGenerator()
 	{
@@ -120,11 +120,13 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		// if there is, go to town initializing stuff
 		if (lastSheetString.equals("Roster")) {
 
+			// set the roster to be hidden
+			workbook.setSheetHidden(workbook.getNumberOfSheets() - 1, Workbook.SHEET_STATE_HIDDEN);
 			// clear container
 			removeAll();
 			//Add the buttons back in
 			initButtonPanel();
-			// Add a separator :)
+			// Add a separator
 			add(Box.createHorizontalStrut(10));
 
 			// get the roster sheet
@@ -138,7 +140,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			int count = 0;
 			// for each template sheet skip to the next row of employees
 			while (count < numTemplates) {
-				String groupLabel = templateBook.getSheetName(count);
+				String groupLabel = workbook.getSheetName(count);
 
 				// Get the row containing names for the current iteration
 				XSSFRow nameRow = rosterSheet.getRow(count*2);
@@ -171,11 +173,10 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		return template;
 	}
 
-	public void writeExcelFile(XSSFWorkbook workbook)
+	public void writeExcelFile(XSSFWorkbook workbook, String path, String fileName)
 		throws FileNotFoundException
 	{
-		FileOutputStream fileOut = new FileOutputStream(
-			"target/testWorkbook.xlsx");
+		FileOutputStream fileOut = new FileOutputStream(path + fileName);
 		try {
 			workbook.write(fileOut);
 			workbook.close();
@@ -206,6 +207,9 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		int rosterSheetIndex = templateBook.getNumberOfSheets() - 1;
 		templateBook.removeSheetAt(rosterSheetIndex);
 		templateBook.createSheet("Roster");
+
+		// set the sheet to be hidden
+		templateBook.setSheetHidden(rosterSheetIndex, Workbook.SHEET_STATE_HIDDEN);
 
 		// Get the roster sheet
 		Sheet rosterSheet = templateBook.getSheet("Roster");
@@ -251,9 +255,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		}
 
 		// Save that shit!
-		FileOutputStream fileOut = new FileOutputStream("aNewWorkbook.xlsx");
-		templateBook.write(fileOut);
-		fileOut.close();
+		writeExcelFile(templateBook, templateFileDir, templateFileName);
 	}
 
 	public void addEmployeeToBook (Employee employee, Workbook workbook, int templateSheetIndex)
@@ -276,32 +278,60 @@ public class TimecardGenerator extends JPanel implements ActionListener
 	public void dateTemplateSheets(Workbook wb)
 	{
 		int numTemplates = wb.getNumberOfSheets() - 1;
+		// Constants representing the indexes of rows to insert runs of dates in
 		int[] dateRows = new int[] {7, 10, 13, 16, 19, 22, 25, 28};
+		// Constants representing indexes of columns to insert runs of dates in
 		int[] daysOfWeek = new int[] {6, 7, 8, 9, 10, 11, 12};
 
-		// Yikes ..
-		int index = 0;
-		while (index < numTemplates)
+		// Loop through each template
+		int templateIndex = 0;
+		while (templateIndex < numTemplates)
 		{
-			// get date to use
+			// Start by getting the date from the datepanel
 			int dayOfWeek = datePanel.getDate();
-			// set period fields
-			wb.getSheetAt(index).getRow(1).getCell(10).setCellValue(datePanel.getCal());
 
 			for (int dow : daysOfWeek)
 			{
-				for (int i : dateRows)
+				for (int row : dateRows)
 				{
-					Sheet s = wb.getSheetAt(index);
-					s.getRow(i).getCell(dow).setCellValue(dayOfWeek);
+					Sheet s = wb.getSheetAt(templateIndex);
+					s.getRow(row).getCell(dow).setCellValue(dayOfWeek);
 				}
 				dayOfWeek++;
 			}
+
+			// set the first period field
+			wb.getSheetAt(templateIndex).getRow(1).getCell(10).setCellValue(datePanel.getCal());
+
+			// Set second period field
 			Calendar c = (Calendar) datePanel.getCal().clone();
 			c.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
-			wb.getSheetAt(index).getRow(1).getCell(12).setCellValue(c);
-			index++;
+
+			wb.getSheetAt(templateIndex).getRow(1).getCell(12).setCellValue(c);
+
+			// Iterate
+			templateIndex++;
 		}
+	}
+
+	public String getSaveFileName ()
+	{
+		String cDate;
+		String returnString = "";
+		SimpleDateFormat f = new SimpleDateFormat("M-dd-Y");
+
+		returnString = returnString.concat("Aquatic Timecards ");
+
+		Calendar c = datePanel.getCal();
+		cDate = f.format(c.getTime());
+		returnString = returnString.concat(cDate);
+		returnString = returnString.concat(" to ");
+
+		c.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
+		cDate = f.format(c.getTime());
+		returnString = returnString.concat(cDate);
+
+		return returnString;
 	}
 
 	public void buildTimecards()
@@ -337,8 +367,14 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			count++;
 		}
 
-		try{
-			writeExcelFile(outBook);
+		try
+		{
+			// getSaveFileName returns the plaintext name of the file so we have to process
+			// it a little more
+			String svString = "";
+			svString = svString.concat(getSaveFileName());
+			svString = svString.concat(".xlsx");
+			writeExcelFile(outBook, templateFileDir, svString);
 		}
 		catch (FileNotFoundException ex)
 		{}
@@ -358,7 +394,8 @@ public class TimecardGenerator extends JPanel implements ActionListener
 	public void actionPerformed(ActionEvent e)
 	{
 		//Handle open button action
-		if (e.getSource() == openButton) {
+		if (e.getSource() == openButton)
+		{
 
 			// set current directory to where the file was run from
 			fc.setCurrentDirectory(new java.io.File("").getAbsoluteFile());
@@ -367,11 +404,15 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			int returnVal = fc.showOpenDialog(TimecardGenerator.this);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				File file = fc.getSelectedFile();
-				try {
 
+				try {
 					// Set workbook objects
 					templateBook = readExcelFile(file);
 					outBook = readExcelFile(file);
+					templateFileName = file.getName();
+					// append a file delimiter because we're only planning on using
+					// this to save files with
+					templateFileDir = file.getParent().concat(File.separator);
 
 					// empty the groupList so we can re-initialize it
 					employeeGroupList.removeAllElements();
