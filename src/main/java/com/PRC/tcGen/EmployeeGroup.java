@@ -1,11 +1,13 @@
 package com.PRC.tcGen;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -17,10 +19,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 
 public class EmployeeGroup extends JPanel implements ActionListener
 {
@@ -65,27 +65,34 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		removeEmployeeButton = new JButton("-");
 		removeEmployeeButton.addActionListener(this);
 
-		removeListButton = new JButton("X");
+		removeListButton = new JButton("Remove Template");
 		removeListButton.setMargin(new Insets(0,3,0,3));
 		removeListButton.addActionListener(this);
-
-		// Group label and removeList buttons
-		JPanel header = new JPanel();
-		header.add(listLabel);
-		header.add(removeListButton);
 
 		// Group add and remove buttons
 		JPanel addRemoveButtons = new JPanel();
 		addRemoveButtons.add(addEmployeeButton);
 		addRemoveButtons.add(removeEmployeeButton);
 
-		this.add(header);
+		// Center everything
+		listLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		employeeGroupPane.setAlignmentX(Component.CENTER_ALIGNMENT);
+		nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		newEmployeeName.setAlignmentX(Component.CENTER_ALIGNMENT);
+		idLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		newEmployeeID.setAlignmentX(Component.CENTER_ALIGNMENT);
+		addRemoveButtons.setAlignmentX(Component.CENTER_ALIGNMENT);
+		removeListButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+		// Add everything
+		this.add(listLabel);
 		this.add(employeeGroupPane);
 		this.add(nameLabel);
 		this.add(newEmployeeName);
 		this.add(idLabel);
 		this.add(newEmployeeID);
 		this.add(addRemoveButtons);
+		this.add(removeListButton);
 	}
 
 	public void addEmployeeRowsToGroup (Row nameRow, Row IDRow)
@@ -173,7 +180,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		{
 			int confirm = JOptionPane.showConfirmDialog(
 				this.getParent(),
-				"Remove this template and it's staff members?",
+				"Are you sure you want to remove this template and it's employees?",
 				"Confirm",
 				JOptionPane.YES_NO_OPTION);
 			if (confirm == JOptionPane.YES_OPTION)
