@@ -18,6 +18,9 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 
 public class EmployeeGroup extends JPanel implements ActionListener
 {
@@ -30,7 +33,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 	private JButton addEmployeeButton, removeEmployeeButton, removeListButton;
 	private JTextField newEmployeeName, newEmployeeID;
 
-	public EmployeeGroup (String label)
+	public EmployeeGroup (String label, Row nameRow, Row iDRow)
 	{
 		BoxLayout layout = new BoxLayout(this, BoxLayout.Y_AXIS);
 		setLayout(layout);
@@ -41,6 +44,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 
 		//Create Model and JList
 		employeeGroupModel = new DefaultListModel<Employee>();
+		addEmployeeRowsToGroup(nameRow, iDRow);
 		employeeJList = new JList<Employee>(employeeGroupModel);
 
 		employeeJList.setVisibleRowCount(5);
@@ -84,6 +88,27 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		this.add(addRemoveButtons);
 	}
 
+	public void addEmployeeRowsToGroup (Row nameRow, Row IDRow)
+	{
+		// loop through all the cells in Row r
+		// parsing the data into the group
+		for (Cell nameCell : nameRow) {
+			int employeeID;
+
+			// Produce name string from cell, always exists
+			String nameString = nameCell.getStringCellValue();
+
+			// Produce ID string from cell, if one exists
+			Integer IDColIndex = nameCell.getColumnIndex();
+			if (IDRow != null)
+			{
+				Cell IDCell = IDRow.getCell(IDColIndex);
+				employeeID = (int) IDCell.getNumericCellValue();
+				addEmployee(nameString, employeeID);
+			}
+		}
+	}
+
 	public void addEmployee(String employeeName, Integer employeeID)
 	{
 		Employee employee = new Employee(employeeName, employeeID);
@@ -95,9 +120,19 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		return employeeGroupModel;
 	}
 
+	public void removeList ()
+	{
+		TimecardGenerator tcBuilder = (TimecardGenerator) this.getParent();
+		// ew - remove the sheet in the template file
+		tcBuilder.templateBook.removeSheetAt(tcBuilder.templateBook.getSheetIndex(listLabel.getText()));
+		tcBuilder.employeeGroupList.removeElement(this);
+		employeeGroupModel.removeAllElements();
+		this.removeAll();
+		tcBuilder.repack();
+	}
+
 	public void actionPerformed(ActionEvent e)
 	{
-
 		if (e.getSource() == addEmployeeButton)
 		{
 			// Validate name is not null
@@ -143,9 +178,8 @@ public class EmployeeGroup extends JPanel implements ActionListener
 				JOptionPane.YES_NO_OPTION);
 			if (confirm == JOptionPane.YES_OPTION)
 			{
-				System.out.println("Wahoo");
+				removeList();
 			} else {
-				System.out.println("Booo!");
 			}
 		}
 	}

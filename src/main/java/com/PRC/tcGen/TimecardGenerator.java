@@ -48,13 +48,13 @@ public class TimecardGenerator extends JPanel implements ActionListener
 	private DatePanel datePanel;
 
 	// keep track of what template were working from
-	private XSSFWorkbook templateBook;
+	public XSSFWorkbook templateBook;
 
 	// keep track of the workbook we're building
 	private XSSFWorkbook outBook;
 
 	// Create a model to keep track of the number of employee groups initialized
-	private DefaultListModel<EmployeeGroup> employeeGroupList;
+	public DefaultListModel<EmployeeGroup> employeeGroupList;
 
 	public TimecardGenerator()
 	{
@@ -139,19 +139,16 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			// for each template sheet skip to the next row of employees
 			while (count < numTemplates) {
 				String groupLabel = templateBook.getSheetName(count);
-				// create new employeeGroup -- my gui class with an Employee model
-				EmployeeGroup el = new EmployeeGroup(groupLabel);
-				// add the new group to a list for serializing the employees later
-				employeeGroupList.addElement(el);
 
 				// Get the row containing names for the current iteration
 				XSSFRow nameRow = rosterSheet.getRow(count*2);
-				XSSFRow IDRow = rosterSheet.getRow((count*2) + 1);
+				XSSFRow iDRow = rosterSheet.getRow((count*2) + 1);
 
-				if (nameRow != null)
-				{
-					addEmployeeDataToGroup(nameRow, IDRow, el);
-				}
+				// create new employeeGroup -- my gui class with an Employee model
+				EmployeeGroup el = new EmployeeGroup(groupLabel, nameRow, iDRow);
+				// add the new group to a list for serializing the employees later
+				employeeGroupList.addElement(el);
+
 				add(el);
 				add(Box.createHorizontalStrut(3));
 				this.revalidate();
@@ -196,27 +193,6 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		String lastSheetString = workbook.getSheetAt(
 			workbook.getNumberOfSheets() - 1).getSheetName();
 		return lastSheetString;
-	}
-
-	public void addEmployeeDataToGroup (Row nameRow, Row IDRow, EmployeeGroup group)
-	{
-		// loop through all the cells in Row r
-		// parsing the data into the group
-		for (Cell nameCell : nameRow) {
-			int employeeID;
-
-			// Produce name string from cell, always exists
-			String nameString = nameCell.getStringCellValue();
-
-			// Produce ID string from cell, if one exists
-			Integer IDColIndex = nameCell.getColumnIndex();
-			if (IDRow != null)
-			{
-				Cell IDCell = IDRow.getCell(IDColIndex);
-				employeeID = (int) IDCell.getNumericCellValue();
-				group.addEmployee(nameString, employeeID);
-			}
-		}
 	}
 
 	public void serializeGroupList ()
@@ -450,6 +426,11 @@ public class TimecardGenerator extends JPanel implements ActionListener
 				frame.pack();
 				frame.setVisible(true);
 		}
+
+	public void repack ()
+	{
+		frame.pack();
+	}
 
 	public static void main(String[] args)
 	{
