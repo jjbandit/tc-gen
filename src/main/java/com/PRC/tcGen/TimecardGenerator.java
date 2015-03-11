@@ -18,9 +18,11 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
@@ -61,6 +63,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 
 		//Create a file chooser
 		fc = new JFileChooser();
+		fc.addChoosableFileFilter( new FileNameExtensionFilter("Excel file", "xlsx"));
 
 		initButtonPanel();
 	}
@@ -268,7 +271,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		int employeeID = employee.getID();
 
 		// Set sheet fields
-		workbook.setSheetName(employeeGroupList.size(), employeeName);
+		workbook.setSheetName(workbook.getNumberOfSheets() - 1, employeeName);
 		setEmployeeData(employeeName, employeeID, templateSheet);
 	}
 
@@ -409,7 +412,12 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			buildTimecardsButton.setEnabled(false);
 			exitButton.setEnabled(false);
 			// set current directory to where the file was run from
-			fc.setCurrentDirectory(new java.io.File("").getAbsoluteFile());
+			try
+			{
+			 fc.setCurrentDirectory(new java.io.File("").getCanonicalFile());
+			}
+			catch (IOException ex)
+			{}
 
 			// Open the filechooser
 			int returnVal = fc.showOpenDialog(TimecardGenerator.this);
@@ -417,10 +425,26 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			{
 				File file = fc.getSelectedFile();
 
-				try
-				{
 					// Set workbook objects
+					try
+					{
 					templateBook = readExcelFile(file);
+					}
+					catch (IllegalArgumentException ex)
+					{
+						JOptionPane.showMessageDialog(null, "Please choose a file with extension .xlsx", "Try again", JOptionPane.INFORMATION_MESSAGE);
+
+						// Re-enable UI
+						openButton.setEnabled(true);
+						buildTimecardsButton.setEnabled(true);
+						exitButton.setEnabled(true);
+						return;
+					}
+					catch (IOException ex)
+					{}
+					catch (InvalidFormatException ex)
+					{}
+
 					templateFileName = file.getName();
 					// append a file delimiter because we're only planning on using
 					// this to save files with
@@ -430,20 +454,8 @@ public class TimecardGenerator extends JPanel implements ActionListener
 					employeeGroupList.removeAllElements();
 					// init that shit!
 					initEmployeeGroups(templateBook);
-
-					// TODO Not doing much here.. should probably do something about this
-					// like show some error boxes if it's not an xlsx file or whatever
-				}
-				catch (IOException ex)
-				{
-				}
-				catch (InvalidFormatException ex)
-				{
-				}
-				finally
-				{
-				}
 			}
+
 			// filechooser EXIT_OPTION do nothing
 			else
 			{
@@ -456,7 +468,16 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			// Handle buildTC button
 		else if (e.getSource() == buildTimecardsButton)
 		{
+			openButton.setEnabled(false);
+			buildTimecardsButton.setEnabled(false);
+			exitButton.setEnabled(false);
+
 			buildTimecards();
+
+			// Re-enable UI
+			openButton.setEnabled(true);
+			buildTimecardsButton.setEnabled(true);
+			exitButton.setEnabled(true);
 		}
 		//Handle exit button action
 		else if (e.getSource() == exitButton)
