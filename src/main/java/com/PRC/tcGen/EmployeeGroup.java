@@ -20,6 +20,9 @@ import javax.swing.ListSelectionModel;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 
+import com.PRC.tcGen.Employee;
+
+// @SuppressWarnings("hiding")
 public class EmployeeGroup extends JPanel implements ActionListener
 {
 	private static final long serialVersionUID = -6932061067756922392L;
@@ -117,8 +120,8 @@ public class EmployeeGroup extends JPanel implements ActionListener
 
 	public void addEmployee(String employeeName, Integer employeeID)
 	{
-		Employee employee = new Employee(employeeName, employeeID);
-		employeeGroupModel.add(employee);
+		Employee emp = new Employee(employeeName, employeeID);
+		employeeGroupModel.add(emp);
 	}
 
 	public SortedListModel getModel ()

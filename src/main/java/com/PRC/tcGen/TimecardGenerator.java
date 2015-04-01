@@ -221,14 +221,14 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		{
 			// get each employeeGroup in the groupList
 			EmployeeGroup group = employeeGroupList.elementAt(index);
-			DefaultListModel<Employee> employeeGroup = group.getModel();
+			SortedListModel employeeGroup = group.getModel();
 
 			// iterate through each employee
-			int numEmployees = employeeGroup.size();
+			int numEmployees = employeeGroup.getSize();
 			int count = 0;
 			while (count < numEmployees)
 			{
-				String employeeName = employeeGroup.getElementAt(count).getName();
+				String employeeName = employeeGroup.getElementAt(count).getFullName();
 				int employeeID = employeeGroup.getElementAt(count).getID();
 
 				// Set or create new row for employee names
@@ -267,11 +267,18 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		templateSheet.getPrintSetup().setScale((short)80);
 
 		// Get the employee informatino
-		String employeeName = employee.getName();
+		String employeeName = employee.getFullName();
+		String pageName = employee.getInvertedName();
 		int employeeID = employee.getID();
 
+		// Append a counter to employees with identical names
+		int count = 1;
+		while (workbook.getSheet(pageName) != null) {
+			pageName = employee.getInvertedName() + " (" + count + ")";
+			count++;
+		}
 		// Set sheet fields
-		workbook.setSheetName(workbook.getNumberOfSheets() - 1, employeeName);
+		workbook.setSheetName(workbook.getNumberOfSheets() - 1, pageName);
 		setEmployeeData(employeeName, employeeID, templateSheet);
 	}
 
@@ -357,10 +364,10 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		{
 			// get each employeeGroup in the groupList
 			EmployeeGroup group = employeeGroupList.elementAt(index);
-			DefaultListModel<Employee> employeeGroup = group.getModel();
+			SortedListModel employeeGroup = group.getModel();
 
 			// iterate through each employee
-			int numEmployees = employeeGroup.size();
+			int numEmployees = employeeGroup.getSize();
 			int count = 0;
 			while (count < numEmployees)
 			{
