@@ -7,9 +7,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -26,7 +24,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 {
 	private static final long serialVersionUID = -6932061067756922392L;
 
-	private DefaultListModel<Employee> employeeGroupModel;
+	private SortedListModel employeeGroupModel;
 	private JList<Employee> employeeJList;
 
 	private JLabel listLabel, nameLabel, idLabel;
@@ -43,7 +41,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		idLabel = new JLabel("Employee ID");
 
 		//Create Model and JList
-		employeeGroupModel = new DefaultListModel<Employee>();
+		employeeGroupModel = new SortedListModel();
 		addEmployeeRowsToGroup(nameRow, iDRow);
 		employeeJList = new JList<Employee>(employeeGroupModel);
 
@@ -97,6 +95,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 
 	public void addEmployeeRowsToGroup (Row nameRow, Row IDRow)
 	{
+		if (nameRow == null || IDRow == null) { return; }
 		// loop through all the cells in Row r
 		// parsing the data into the group
 		for (Cell nameCell : nameRow) {
@@ -119,10 +118,10 @@ public class EmployeeGroup extends JPanel implements ActionListener
 	public void addEmployee(String employeeName, Integer employeeID)
 	{
 		Employee employee = new Employee(employeeName, employeeID);
-		employeeGroupModel.addElement(employee);
+		employeeGroupModel.add(employee);
 	}
 
-	public DefaultListModel<Employee> getModel ()
+	public SortedListModel getModel ()
 	{
 		return employeeGroupModel;
 	}
@@ -133,7 +132,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		// ew - remove the sheet in the template file
 		tcBuilder.templateBook.removeSheetAt(tcBuilder.templateBook.getSheetIndex(listLabel.getText()));
 		tcBuilder.employeeGroupList.removeElement(this);
-		employeeGroupModel.removeAllElements();
+		employeeGroupModel.clear();
 		this.removeAll();
 		tcBuilder.repack();
 	}
@@ -169,7 +168,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		if (!emName.isEmpty() && emID > 0)
 			{
 				Employee employee = new Employee(emName, emID);
-				employeeGroupModel.addElement(employee);
+				employeeGroupModel.add(employee);
 			}
 		}
 		else if (e.getSource() == removeEmployeeButton)

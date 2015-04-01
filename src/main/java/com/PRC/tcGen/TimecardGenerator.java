@@ -372,10 +372,17 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		}
 		// Remove template sheets and roster
 		int count = 0;
-		while (count <= numTemplates)
+		while (count < numTemplates)
 		{
 			outBook.removeSheetAt(0);
 			count++;
+		}
+		// At this point the roster sheet is at index 0 ->
+		// check for its existence and remove it if it's found
+		Sheet rosterSheet = outBook.getSheet("Roster");
+		if (rosterSheet != null)
+		{
+			outBook.removeSheetAt(0);
 		}
 
 		try
@@ -414,7 +421,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			// set current directory to where the file was run from
 			try
 			{
-			 fc.setCurrentDirectory(new java.io.File("").getCanonicalFile());
+				fc.setCurrentDirectory(new java.io.File("").getCanonicalFile());
 			}
 			catch (IOException ex)
 			{}
