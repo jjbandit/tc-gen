@@ -1,7 +1,6 @@
 package com.PRC.tcGen;
 
-public class Employee implements Comparable<Employee>
-{
+public class Employee implements Comparable<Object> {
 	private String employeeName;
 	private int employeeID;
 	private int templateIndex;
@@ -64,14 +63,34 @@ public class Employee implements Comparable<Employee>
 		return this.getInvertedName() + " - " + employeeID;
 	}
 
-	public int compareTo(Employee compObj)
+	@Override
+	public int compareTo(Object compObj)
 	{
-		int compResult = this.getLastName().compareToIgnoreCase(compObj.getLastName());
+		Employee e = (Employee) compObj;
+		int compResult = this.getLastName().compareToIgnoreCase(e.getLastName());
 
-		if (compResult == 0) {
-			return 1;
-		} else {
-			return compResult;
+		// Compare first names if last names are equal
+		if (compResult == 0)
+		{
+			compResult = this.getFirstName().compareToIgnoreCase(e.getFirstName());
 		}
+
+		// Compare Employee IDs if first names are equal
+		if (compResult == 0)
+		{
+			if (this.getID() == e.getID()) {
+				compResult = 0;
+			}
+			else if (this.getID() > e.getID())
+			{
+				compResult = 1;
+			}
+			else if (this.getID() < e.getID())
+			{
+				compResult = -1;
+			}
+		}
+
+		return compResult;
 	}
 }

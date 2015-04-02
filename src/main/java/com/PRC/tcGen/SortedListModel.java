@@ -25,8 +25,10 @@ public class SortedListModel extends AbstractListModel<Employee>
 		return (Employee)model.toArray()[index];
 	}
 
-	public void add(Employee element) {
-		if (model.add(element)) {
+	public void add(Employee element)
+	{
+		if (model.add(element))
+		{
 			fireContentsChanged(this, 0, getSize());
 		}
 	}

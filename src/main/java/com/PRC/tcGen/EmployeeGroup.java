@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Iterator;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -47,7 +48,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		addEmployeeRowsToGroup(nameRow, iDRow);
 		employeeJList = new JList<Employee>(employeeGroupModel);
 
-		employeeJList.setVisibleRowCount(5);
+		// employeeJList.setVisibleRowCount(15);
 		employeeJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		JScrollPane employeeGroupPane = new JScrollPane(employeeJList);
 
@@ -66,7 +67,7 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		removeEmployeeButton.addActionListener(this);
 
 		removeListButton = new JButton("Remove Template");
-		removeListButton.setMargin(new Insets(0,3,0,3));
+		// removeListButton.setMargin(new Insets(0,3,0,3));
 		removeListButton.addActionListener(this);
 
 		// Group add and remove buttons
@@ -143,7 +144,12 @@ public class EmployeeGroup extends JPanel implements ActionListener
 	{
 		// This method is nessicary for building the timecards. It calls setTemplateIndex
 		// on each Employee so we know what template sheet to use when building timecards
-		
+		Iterator<Employee> i = employeeGroupModel.iterator();
+		while (i.hasNext())
+		{
+			Employee e = i.next();
+			e.setTemplateIndex(index);
+		}
 
 	}
 
@@ -177,13 +183,13 @@ public class EmployeeGroup extends JPanel implements ActionListener
 			// Wow this is ugly!
 		if (!emName.isEmpty() && emID > 0)
 			{
-				Employee employee = new Employee(emName, emID);
-				employeeGroupModel.add(employee);
+				addEmployee(emName, emID);
 			}
 		}
 		else if (e.getSource() == removeEmployeeButton)
 		{
-			employeeGroupModel.removeElement(employeeJList.getSelectedValue());
+			Employee emp = employeeJList.getSelectedValue();
+			employeeGroupModel.removeElement(emp);
 		}
 		else if (e.getSource() == removeListButton)
 		{

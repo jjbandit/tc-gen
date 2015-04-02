@@ -284,10 +284,10 @@ public class TimecardGenerator extends JPanel implements ActionListener
 	public void dateTemplateSheets(Workbook wb)
 	{
 		int numTemplates = wb.getNumberOfSheets() - 1;
-		// Constants representing the indexes of rows to insert runs of dates in
-		int[] dateRows = new int[] {7, 10, 13, 16, 19, 22, 25, 28};
 		// Constants representing indexes of columns to insert runs of dates in
 		int[] daysOfWeek = new int[] {6, 7, 8, 9, 10, 11, 12};
+		// Constants representing the indexes of rows to insert runs of dates in
+		int[] dateRows = new int[] {7, 10, 13, 16, 19, 22, 25, 28};
 
 		// Loop through each template
 		int templateIndex = 0;
@@ -295,25 +295,47 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		{
 			// Start by getting the date from the datepanel
 			int dayOfWeek = datePanel.getDate();
+			// And the sheet were working with
+			Sheet s = wb.getSheetAt(templateIndex);
 
 			for (int dow : daysOfWeek)
 			{
 				for (int row : dateRows)
 				{
-					Sheet s = wb.getSheetAt(templateIndex);
-					s.getRow(row).getCell(dow).setCellValue(dayOfWeek);
+					Row r = s.getRow(row);
+					if (r != null)
+					{
+						Cell c = s.getRow(row).getCell(dow, Row.CREATE_NULL_AS_BLANK);
+						c.setCellValue(dayOfWeek);
+					} else {
+						r = s.createRow(row);
+						Cell c = r.getCell(dow, Row.CREATE_NULL_AS_BLANK);
+						c.setCellValue(dayOfWeek);
+					}
 				}
 				dayOfWeek++;
 			}
 
 			// set the first period field
-			wb.getSheetAt(templateIndex).getRow(1).getCell(10).setCellValue(datePanel.getCal());
+			Row rOne = s.getRow(1);
+			if (rOne != null)
+			{
+				rOne.getCell(10, Row.CREATE_NULL_AS_BLANK).setCellValue(datePanel.getCal());
 
-			// Set second period field
-			Calendar c = (Calendar) datePanel.getCal().clone();
-			c.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
+				// Set second period field
+				Calendar c = (Calendar) datePanel.getCal().clone();
+				c.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
+				rOne.getCell(12, Row.CREATE_NULL_AS_BLANK).setCellValue(c);
 
-			wb.getSheetAt(templateIndex).getRow(1).getCell(12).setCellValue(c);
+			} else {
+				rOne = s.createRow(1);
+				rOne.getCell(10, Row.CREATE_NULL_AS_BLANK).setCellValue(datePanel.getCal());
+
+				// Set second period field
+				Calendar c = (Calendar) datePanel.getCal().clone();
+				c.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
+				rOne.getCell(12, Row.CREATE_NULL_AS_BLANK).setCellValue(c);
+			}
 
 			// Iterate
 			templateIndex++;
@@ -415,12 +437,26 @@ public class TimecardGenerator extends JPanel implements ActionListener
 	public void setEmployeeData (String employeeName, int employeeID, Sheet sheet)
 	{
 		Row nameRow = sheet.getRow(3);
-		Cell nameCell = nameRow.getCell(2);
-		nameCell.setCellValue(employeeName);
+		if (nameRow != null)
+		{
+			Cell nameCell = nameRow.getCell(2, Row.CREATE_NULL_AS_BLANK);
+			nameCell.setCellValue(employeeName);
+		} else {
+			nameRow = sheet.createRow(3);
+			Cell nameCell = nameRow.getCell(2, Row.CREATE_NULL_AS_BLANK);
+			nameCell.setCellValue(employeeName);
+		}
 
 		Row idRow = sheet.getRow(2);
-		Cell idCell = idRow.getCell(2);
-		idCell.setCellValue(employeeID);
+		if (idRow != null)
+		{
+			Cell idCell = idRow.getCell(2, Row.CREATE_NULL_AS_BLANK);
+			idCell.setCellValue(employeeID);
+		} else {
+			idRow = sheet.createRow(2);
+			Cell idCell = idRow.getCell(2, Row.CREATE_NULL_AS_BLANK);
+			idCell.setCellValue(employeeID);
+		}
 	}
 
 	public void actionPerformed(ActionEvent e)
