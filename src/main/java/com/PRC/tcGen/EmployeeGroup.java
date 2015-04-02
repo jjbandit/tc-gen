@@ -22,7 +22,6 @@ import org.apache.poi.ss.usermodel.Row;
 
 import com.PRC.tcGen.Employee;
 
-// @SuppressWarnings("hiding")
 public class EmployeeGroup extends JPanel implements ActionListener
 {
 	private static final long serialVersionUID = -6932061067756922392L;
@@ -138,6 +137,14 @@ public class EmployeeGroup extends JPanel implements ActionListener
 		employeeGroupModel.clear();
 		this.removeAll();
 		tcBuilder.repack();
+	}
+
+	public void setTemplateIndex (int index)
+	{
+		// This method is nessicary for building the timecards. It calls setTemplateIndex
+		// on each Employee so we know what template sheet to use when building timecards
+		
+
 	}
 
 	public void actionPerformed(ActionEvent e)

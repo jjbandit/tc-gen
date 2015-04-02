@@ -4,6 +4,7 @@ public class Employee implements Comparable<Employee>
 {
 	private String employeeName;
 	private int employeeID;
+	private int templateIndex;
 
 	public Employee(String name, Integer ID)
 	{
@@ -45,6 +46,16 @@ public class Employee implements Comparable<Employee>
 	public int getID ()
 	{
 		return this.employeeID;
+	}
+
+	public int getTemplateIndex ()
+	{
+		return templateIndex;
+	}
+
+	public void setTemplateIndex (int index)
+	{
+		templateIndex = index;
 	}
 
 	@Override

@@ -173,8 +173,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		return wb;
 	}
 
-	public void writeExcelFile(Workbook workbook, String path, String fileName)
-		throws FileNotFoundException
+	public void writeExcelFile(Workbook workbook, String path, String fileName) throws FileNotFoundException
 	{
 		FileOutputStream fileOut = new FileOutputStream(path + fileName);
 		try {
@@ -359,30 +358,38 @@ public class TimecardGenerator extends JPanel implements ActionListener
 
 		int index = 0;
 		int numTemplates = employeeGroupList.size();
+		SortedListModel sortedEmployees = new SortedListModel();
 		// Loop through each group in the GroupList
+		// adding each set to a new sortedList
 		while (index < numTemplates)
 		{
-			// get each employeeGroup in the groupList
+			// get employeeGroup
 			EmployeeGroup group = employeeGroupList.elementAt(index);
-			SortedListModel employeeGroup = group.getModel();
 
-			// iterate through each employee
-			int numEmployees = employeeGroup.getSize();
-			int count = 0;
-			while (count < numEmployees)
-			{
-				Employee e = employeeGroup.getElementAt(count);
-				addEmployeeToBook(e, outBook, index);
-				count++;
-			}
+			// Make each employee in the group aware of what template it belongs to
+			group.setTemplateIndex(index);
+
+			// Sort the employees by adding them to a sorted list
+			sortedEmployees.addAll(group.getModel());
 			index++;
 		}
+
+		// iterate through each employee
+		int numEmployees = sortedEmployees.getSize();
+		int curEmployee = 0;
+		while (curEmployee < numEmployees)
+		{
+			Employee e = sortedEmployees.getElementAt(curEmployee);
+			addEmployeeToBook(e, outBook, e.getTemplateIndex());
+			curEmployee++;
+		}
+
 		// Remove template sheets and roster
-		int count = 0;
-		while (count < numTemplates)
+		int sheetCount = 0;
+		while (sheetCount < numTemplates)
 		{
 			outBook.removeSheetAt(0);
-			count++;
+			sheetCount++;
 		}
 		// At this point the roster sheet is at index 0 ->
 		// check for its existence and remove it if it's found
