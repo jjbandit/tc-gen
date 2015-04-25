@@ -11,11 +11,14 @@ GNU General Public License for more details.
 # Preamble
 	This is a tool I built to quickly generate CRD Timecards.  It should
 	be distributed as a single zip archive including a copy of the GPL v3
-	License, this readme and a precompiled .jar file.
+	License, this readme, a blank template.xlsx and a tc-gen.jar file.
 
 	Copyright (C) 2015 Jesse Hughes
 	<jesse.hughes.it@gmail.com>
 
 # Usage
-	To 
+	To start generating timecards first you need a template file to point
+	this program towards.  A blank template sheet is provided in the 
+	archive you downloaded
+
 
