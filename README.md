@@ -8,9 +8,6 @@ This is a tool I built to quickly generate CRD Timecards.
 - exampleTemplate.xlsx
 - tc-gen-v0.2.jar
 
-Copyright (C) 2015 Jesse Hughes
-<jesse.hughes.it@gmail.com>
-
 # Usage
 To start generating timecards first you need a template file to point
 the program towards.  A blank template workbook is provided in the
@@ -55,6 +52,12 @@ hidden 'Roster' sheet inside your excel Template. Make sure you are
 using the 'Save & Close' button, and that the template workbook
 is not open in Excel.
 
+# Shameless Self Promotion
+Like this software? Consider [contributing](http://jessejames.ca/projects/tc-gen)
+to its development.
+
+Like the way I do business? Contact me by email at jesse.hughes.it@gmail.com
+
 # License
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -65,3 +68,5 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
+
+Copyright (C) 2015 Jesse Hughes
