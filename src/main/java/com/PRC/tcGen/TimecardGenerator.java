@@ -114,12 +114,16 @@ public class TimecardGenerator extends JPanel implements ActionListener
 	public void initEmployeeGroups(Workbook workbook)
 	{
 		// check if there's a roster sheet already
-		String lastSheetString = getLastSheetName(workbook);
+		int rosterSheetIndex = workbook.getSheetIndex("Roster");
+
 		// if there is, go to town initializing stuff
-		if (lastSheetString.equals("Roster")) {
+		if (rosterSheetIndex > -1) {
 
 			// set the roster to be hidden
-			workbook.setSheetHidden(workbook.getNumberOfSheets() - 1, Workbook.SHEET_STATE_HIDDEN);
+			workbook.setSheetHidden(rosterSheetIndex, Workbook.SHEET_STATE_HIDDEN);
+			// then send it to the back of the workbook
+			workbook.setSheetOrder("Roster", workbook.getNumberOfSheets() - 1 );
+
 			// clear container
 			removeAll();
 			//Add the buttons back in
@@ -127,8 +131,6 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			// Add a separator
 			add(Box.createHorizontalStrut(10));
 
-			// get the roster sheet
-			Sheet rosterSheet = workbook.getSheet("Roster");
 			// and the number of template sheets in the workbook
 			Integer numTemplates = workbook.getNumberOfSheets() - 1;
 
@@ -141,6 +143,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 				String groupLabel = workbook.getSheetName(count);
 
 				// Get the row containing names for the current iteration
+				Sheet rosterSheet = workbook.getSheet("Roster");
 				Row nameRow = rosterSheet.getRow(count*2);
 				Row iDRow = rosterSheet.getRow((count*2) + 1);
 
@@ -188,13 +191,6 @@ public class TimecardGenerator extends JPanel implements ActionListener
 
 	}
 
-	private String getLastSheetName(Workbook workbook)
-	{
-		String lastSheetString = workbook.getSheetAt(
-			workbook.getNumberOfSheets() - 1).getSheetName();
-		return lastSheetString;
-	}
-
 	public void serializeGroupList ()
 		throws IOException
 	{
@@ -203,7 +199,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 
 		// We're going to completely remove the rosterSheet and insert a blank one
 		// because it's easier than iterating though all the cells and clearing them
-		int rosterSheetIndex = templateBook.getNumberOfSheets() - 1;
+		int rosterSheetIndex = templateBook.getSheetIndex("Roster");
 		templateBook.removeSheetAt(rosterSheetIndex);
 		templateBook.createSheet("Roster");
 
@@ -283,7 +279,8 @@ public class TimecardGenerator extends JPanel implements ActionListener
 
 	public void dateTemplateSheets(Workbook wb)
 	{
-		int numTemplates = wb.getNumberOfSheets() - 1;
+		// We can use the total number of sheets because we ripped out the roster sheet
+		int numTemplates = wb.getNumberOfSheets();
 		// Constants representing indexes of columns to insert runs of dates in
 		int[] daysOfWeek = new int[] {6, 7, 8, 9, 10, 11, 12};
 		// Constants representing the indexes of rows to insert runs of dates in
@@ -375,6 +372,10 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		catch(InvalidFormatException ex)
 		{return;}
 
+		// Rip out roster sheet because we're not going to need it
+		int rosterSheetIndex = outBook.getSheetIndex("Roster");
+		outBook.removeSheetAt(rosterSheetIndex);
+
 		// First we insert date runs into the template cards
 		dateTemplateSheets(outBook);
 
@@ -412,13 +413,6 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		{
 			outBook.removeSheetAt(0);
 			sheetCount++;
-		}
-		// At this point the roster sheet is at index 0 ->
-		// check for its existence and remove it if it's found
-		Sheet rosterSheet = outBook.getSheet("Roster");
-		if (rosterSheet != null)
-		{
-			outBook.removeSheetAt(0);
 		}
 
 		try
