@@ -1,6 +1,5 @@
-
 # Preamble
-This is a tool I built to quickly generate CRD Timecards.
+This is a tool to quickly generate CRD Timecards.
 ## File List
 - LICENSE
 - README.md
