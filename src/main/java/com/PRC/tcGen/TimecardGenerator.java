@@ -290,8 +290,11 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		int templateIndex = 0;
 		while (templateIndex < numTemplates)
 		{
+
 			// Start by getting the date from the datepanel
-			int dayOfWeek = datePanel.getDate();
+			Calendar cal = datePanel.getCal();
+			int dayOfWeek = cal.get(Calendar.DAY_OF_MONTH);
+
 			// And the sheet were working with
 			Sheet s = wb.getSheetAt(templateIndex);
 
@@ -310,7 +313,10 @@ public class TimecardGenerator extends JPanel implements ActionListener
 						c.setCellValue(dayOfWeek);
 					}
 				}
-				dayOfWeek++;
+				// Increment the calendar we pulled from the datepanel UI element
+				cal.add(Calendar.DATE, 1);
+				// And get the new date integer
+				dayOfWeek = cal.get(Calendar.DAY_OF_MONTH);
 			}
 
 			// set the first period field
