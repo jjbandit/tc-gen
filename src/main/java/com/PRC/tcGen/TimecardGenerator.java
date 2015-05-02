@@ -18,6 +18,10 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -35,6 +39,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 public class TimecardGenerator extends JPanel implements ActionListener
 {
 	private static final long serialVersionUID = -867058275401540869L;
+	public String version = "0.2.1";
 
 	private static JFrame frame;
 
@@ -49,30 +54,54 @@ public class TimecardGenerator extends JPanel implements ActionListener
 	// UI Junk
 	private BoxLayout layout;
 
-	private JButton openButton, exitButton, buildTimecardsButton;
-	private JFileChooser fc;
-	private DatePanel datePanel;
+		private JButton openButton, exitButton, buildTimecardsButton;
+		private JFileChooser fc;
+		private DatePanel datePanel;
 
-	public TimecardGenerator()
-	{
-		// Initialize a list to keep track of how many groups there are
-		employeeGroupList = new DefaultListModel<EmployeeGroup>();
+		private JMenuBar menuBar;
+		private JMenu menu;
+		private JMenuItem infoMenuItem, instructionMenuItem;
 
-		layout = new BoxLayout(this, BoxLayout.X_AXIS);
-		this.setLayout(layout);
 
-		//Create a file chooser
-		fc = new JFileChooser();
-		fc.addChoosableFileFilter( new FileNameExtensionFilter("Excel file", "xlsx"));
+		public TimecardGenerator()
+		{
+			// Initialize a list to keep track of how many groups there are
+			employeeGroupList = new DefaultListModel<EmployeeGroup>();
 
-		initButtonPanel();
-	}
+			layout = new BoxLayout(this, BoxLayout.X_AXIS);
+			this.setLayout(layout);
 
-	public void initButtonPanel ()
-	{
-		//Create the open button.  We use the image from the JLF
+			//Create a file chooser
+			fc = new JFileChooser();
+			fc.addChoosableFileFilter( new FileNameExtensionFilter("Excel file", "xlsx"));
+
+			initMenuBar();
+			initButtonPanel();
+		}
+
+		public void initMenuBar ()
+		{
+			menuBar = new JMenuBar();
+			menu = new JMenu("Help");
+			menuBar.add(menu);
+
+			infoMenuItem = new JMenuItem("Info");
+			infoMenuItem.addActionListener(this);
+
+			instructionMenuItem = new JMenuItem("Instructions");
+			instructionMenuItem.addActionListener(this);
+
+			menu.add(infoMenuItem);
+			menu.add(instructionMenuItem);
+
+			frame.setJMenuBar(menuBar);
+		}
+
+		public void initButtonPanel ()
+		{
+			//Create the open button.  We use the image from the JLF
 		//Graphics Repository (but we extracted it from the jar).
-		openButton = new JButton("Open a File...");
+		openButton = new JButton("Open Template");
 		openButton.addActionListener(this);
 
 		//Create the save button.  We use the image from the JLF
@@ -87,6 +116,11 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		// Create the date picker -- my custom class to initialize
 		// the date picker ui element
 		datePanel = new DatePanel();
+
+		// Self promotion
+		JLabel sp1 = new JLabel("Built and maintained by Jesse Hughes (C) 2015");
+		JLabel sp2 = new JLabel("www.jessejames.ca/projects/tc-gen for more information");
+
 
 		//For layout purposes, put the buttons in a separate panel
 		Box vBox = Box.createVerticalBox();
@@ -106,6 +140,12 @@ public class TimecardGenerator extends JPanel implements ActionListener
 		vBox.add(Box.createVerticalStrut(15));
 		datePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		vBox.add(datePanel);
+
+		vBox.add(Box.createVerticalStrut(15));
+		sp1.setAlignmentX(Component.CENTER_ALIGNMENT);
+		vBox.add(sp1);
+		sp2.setAlignmentX(Component.CENTER_ALIGNMENT);
+		vBox.add(sp2);
 
 		//Add the buttons and the log to this panel.
 		add(vBox);
@@ -547,6 +587,37 @@ public class TimecardGenerator extends JPanel implements ActionListener
 			{}
 			System.exit(0);
 		}
+		else if (e.getSource() == infoMenuItem)
+		{
+			showInfo();
+		}
+		else if (e.getSource() == instructionMenuItem)
+		{
+			showInstructions();
+		}
+	}
+
+	private void showInfo()
+	{
+		JOptionPane.showMessageDialog(frame,
+			"If you find this program useful and would like to find out more, \n"
+			+ "or you would like to contribute to its development, \n"
+			+ "please visit www.jessejames.ca/projects/tc-gen \n"
+			+ "\n"
+			+ "Version " + version + "\n"
+			+ "For the latest version visit www.jessejames.ca/projects/tc-gen \n"
+			+ "\n"
+			+ "This is Free and Open Source software, distributed under GNU GPL v3. \n"
+			+ "Jesse Hughes, (C) 2015. \n"
+		);
+	}
+
+	private void showInstructions()
+	{
+		JOptionPane.showMessageDialog(frame,
+			"For instructions on using this software please visit \n"
+			+ "www.jessejames.ca/projects/tc-gen/readme \n"
+		);
 	}
 
 	/**
