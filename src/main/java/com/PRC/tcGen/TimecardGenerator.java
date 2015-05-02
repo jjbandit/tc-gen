@@ -119,7 +119,7 @@ public class TimecardGenerator extends JPanel implements ActionListener
 
 		// Self promotion
 		JLabel sp1 = new JLabel("Built and maintained by Jesse Hughes (C) 2015");
-		JLabel sp2 = new JLabel("www.jessejames.ca/projects/tc-gen for more information");
+		JLabel sp2 = new JLabel("www.jessejames.ca");
 
 
 		//For layout purposes, put the buttons in a separate panel
